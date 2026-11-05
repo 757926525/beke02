@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  fox2-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fox2-blog
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
