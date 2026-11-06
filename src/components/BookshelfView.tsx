@@ -82,8 +82,28 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
     }
   };
 
-  const handleDownloadBook = (book: Book) => {
-    // Generate simulated text download or redirect to fileUrl
+  const handleDownloadBook = async (book: Book) => {
+    if (book.fileUrl && (book.fileUrl.startsWith('/uploads/') || book.fileUrl.startsWith('/api/'))) {
+      try {
+        const res = await fetch(book.fileUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${book.title}.${book.format || 'epub'}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          return;
+        }
+      } catch (err) {
+        console.warn('Direct file download fallback:', err);
+      }
+    }
+
+    // Generate readable digital book file
     const blob = new Blob([
       `【${book.title}】 - 作者: ${book.author}\n\n${book.chapters.map(c => `### ${c.title}\n\n${c.content}`).join('\n\n')}`
     ], { type: 'text/plain;charset=utf-8' });

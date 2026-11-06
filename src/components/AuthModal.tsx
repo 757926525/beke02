@@ -147,16 +147,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              密码 {mode === 'register' && <span className="font-normal text-slate-400">(新用户可免密或任意设置)</span>}
+              密码 <span className="font-normal text-slate-400">(普通用户免密/自选，站长必填)</span>
             </label>
             <div className="relative">
               <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="password"
-                required={mode === 'login'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder={mode === 'login' ? '站长初始密码: fox2admin888' : '设置个人密码'}
+                placeholder={username === 'admin' ? '站长密码: fox2admin888' : '普通用户可直接免密登录'}
                 className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none"
               />
             </div>

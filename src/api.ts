@@ -86,6 +86,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     throw new Error(`网络连接失败，请检查服务是否启动: ${netErr.message || 'Network error'}`);
   }
 
+  // Catch HTTP 405 Method Not Allowed explicitly with actionable message
+  if (res.status === 405) {
+    throw new Error(`服务端方法不支持 (HTTP 405: ${options.method || 'GET'} 请求被禁止)，请重试或刷新`);
+  }
+
   // Handle non-JSON or empty response gracefully to prevent:
   // "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
   const text = await res.text();

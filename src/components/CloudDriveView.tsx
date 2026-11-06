@@ -84,23 +84,42 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
     }
   };
 
-  const handleDownloadWithProgress = (file: CloudFile) => {
-    setDownloadProgress({ id: file.id, progress: 15 });
+  const handleDownloadWithProgress = async (file: CloudFile) => {
+    setDownloadProgress({ id: file.id, progress: 20 });
     const timer = setInterval(() => {
       setDownloadProgress(prev => {
         if (!prev) return null;
-        if (prev.progress >= 95) {
+        if (prev.progress >= 90) {
           clearInterval(timer);
-          return { id: file.id, progress: 100 };
+          return { id: file.id, progress: 95 };
         }
         return { id: file.id, progress: prev.progress + 25 };
       });
-    }, 120);
+    }, 100);
 
-    setTimeout(() => {
-      window.location.href = `/api/files/download/${file.id}`;
-      setTimeout(() => setDownloadProgress(null), 800);
-    }, 600);
+    try {
+      // Robust download via fetch blob + <a> click (bypasses browser location.href blocking & reverse proxy limitations)
+      const res = await fetch(`/api/files/download/${file.id}`);
+      if (!res.ok) {
+        throw new Error(`下载服务响应失败 (HTTP ${res.status})`);
+      }
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+      setDownloadProgress({ id: file.id, progress: 100 });
+    } catch (err: any) {
+      // Fallback: direct window download
+      window.open(`/api/files/download/${file.id}`, '_blank');
+    } finally {
+      clearInterval(timer);
+      setTimeout(() => setDownloadProgress(null), 600);
+    }
   };
 
   const handleSelectAll = () => {
