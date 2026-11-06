@@ -4,11 +4,14 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "./dist"
 
+[build]
+command = "npm run build:pages"
+
 [vars]
-NODE_ENV = "production"
 ADMIN_USER = "admin"
 ADMIN_PASSWORD = "fox2admin888"
 CORS_ORIGIN = "*"
+NPM_FLAGS = "--include=dev"
 
 # Cloudflare KV Namespace (用于博客文章、系统设置、元数据持久化)
 # 创建命令: npx wrangler kv namespace create FOX2_KV
