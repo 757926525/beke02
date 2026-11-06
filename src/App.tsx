@@ -12,6 +12,7 @@ import { HistoryManagerView } from './components/HistoryManagerView';
 import { AdminView } from './components/AdminView';
 import { WriteModal } from './components/WriteModal';
 import { ReadModal } from './components/ReadModal';
+import { AuthModal } from './components/AuthModal';
 import {
   Post,
   Book,
@@ -21,37 +22,69 @@ import {
   HistoryItem,
   HeroConfig,
   SystemSettings,
-  NavTab
+  NavTab,
+  User
 } from './types';
-import { api } from './api';
+import { api, setAuthSession, getAuthSession } from './api';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('blog');
   const [loading, setLoading] = useState<boolean>(true);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState<boolean>(false);
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+
+  // Current session user (Admin by default on start or guest/registered)
+  const [currentUser, setCurrentUser] = useState<User | null>({
+    id: 'user-admin',
+    username: 'admin',
+    role: 'admin',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    createdAt: '2025-01-01',
+  });
 
   // Core dynamic states (Zero localStorage, fully server-synced)
   const [hero, setHero] = useState<HeroConfig>({
-    tag: '灵狐踏雪 · 随心而述 · 云端无界',
-    title: '极简敏捷与多云边缘博客',
-    description: '原生适配多云边缘 Pages（Cloudflare / 腾讯云 / 阿里云），一键拉取与构建，集成 D1 边缘数据库与全功能媒体中枢。',
-    bannerImage: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=1200&q=80',
-    storageUsed: 81.6,
-    storageTotal: 10240,
+    tag: '灵狐踏雪 · 随心而述 · 碧玉长空',
+    title: '现代敏捷多云博客与云端个人空间',
+    description: '原生适配多云边缘生态（Cloudflare D1 / R2 / KV / Workers AI 与 阿里云 / 腾讯云），优雅绿白视界，轻量高效。',
+    bannerImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
+    storageUsed: 0,
+    storageTotal: 0,
   });
 
   const [settings, setSettings] = useState<SystemSettings>({
-    siteName: '白狐博客 - WhiteFox Blog',
+    siteName: 'fox · 现代多云数字空间',
     authorName: 'fox (站长)',
-    subtitle: '优雅多云架构 · 白狐极简数字空间',
+    subtitle: '微软 Outlook 灵感优雅绿白美学 · 云边协同',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    headerBrand: 'fox',
     aiModel: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
     aiApiKey: '',
     aiBaseUrl: 'https://api.deepseek.com/v1',
-    aiSystemPrompt: '你是由白狐博客驱动的专家级智能编程与技术架构顾问。',
-    themeColor: '#f43f5e',
-    d1Enabled: true,
-    r2BucketName: 'fox-blog-assets',
-    webdavUrl: 'https://dav.jianguoyun.com/dav/',
+    aiSystemPrompt: '你是由 fox 博客驱动的高级智能架构师与代码工匠。请提供符合微软工程标准与清晰逻辑的解答。',
+    themeColor: '#059669',
+    themeLayout: 'default',
+    d1Enabled: false,
+    r2BucketName: '',
+    webdavUrl: '',
+    webdavConfig: {
+      serverUrl: 'https://dav.jianguoyun.com/dav/',
+      username: 'foxuser@outlook.com',
+      password: '',
+      remotePath: '/fox2_backup',
+    },
+    cfBindings: {
+      d1Bound: false,
+      d1DatabaseName: '',
+      r2Bound: false,
+      r2BucketName: '',
+      kvBound: false,
+      kvNamespace: '',
+      aiBound: false,
+      aiModelName: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+    },
+    requireEmailRegistration: false,
+    hideNonBlogForGuests: false,
   });
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -98,16 +131,26 @@ export const App: React.FC = () => {
     loadInitialData();
   }, []);
 
+  const handleLogout = () => {
+    setAuthSession('guest', 'guest', '访客');
+    setCurrentUser(null);
+    if (activeTab === 'admin' || activeTab === 'cloud') {
+      setActiveTab('blog');
+    }
+  };
+
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
+    loadInitialData();
+  };
+
   // Handlers for Posts
   const handleSelectPost = async (post: Post) => {
     setReadingPost(post);
-    // Persist history & read count on server
     try {
       const updatedPost = await api.getPost(post.id);
       setReadingPost(updatedPost);
-      // update local posts list
       setPosts(prev => prev.map(p => (p.id === post.id ? updatedPost : p)));
-      // record history
       const newHist = await api.addHistory({
         title: post.title,
         category: post.category,
@@ -150,6 +193,16 @@ export const App: React.FC = () => {
     setPosts(prev => [created, ...prev]);
   };
 
+  const handleDeletePost = async (id: string) => {
+    try {
+      await api.deletePost(id);
+      setPosts(prev => prev.filter(p => p.id !== id));
+      if (readingPost?.id === id) setReadingPost(null);
+    } catch (err: any) {
+      alert(err.message || '删除失败');
+    }
+  };
+
   const handleDeleteHistoryItem = async (id: string) => {
     await api.deleteHistoryItem(id);
     setHistory(prev => prev.filter(h => h.id !== id));
@@ -160,26 +213,21 @@ export const App: React.FC = () => {
     setHistory([]);
   };
 
-  // Handlers for Bookshelf
   const handleUpdateBookProgress = async (bookId: string, page: number) => {
     const updated = await api.updateBookProgress(bookId, page);
     setBooks(prev => prev.map(b => (b.id === bookId ? updated : b)));
   };
 
-  // Handlers for Shop & Orders
   const handlePlaceOrder = async (orderData: any) => {
     const newOrder = await api.createOrder(orderData);
     setOrders(prev => [newOrder, ...prev]);
-    // refresh products stock
     const prods = await api.getProducts();
     setProducts(prods);
   };
 
-  // Handlers for Cloud Files
   const handleUploadFile = async (file: File) => {
     const uploaded = await api.uploadFile(file);
     setFiles(prev => [uploaded, ...prev]);
-    // refresh hero storage
     const h = await api.getHero();
     setHero(h);
   };
@@ -191,7 +239,13 @@ export const App: React.FC = () => {
     setHero(h);
   };
 
-  // Handlers for Admin
+  const handleBatchDeleteFiles = async (ids: string[]) => {
+    await api.batchDeleteFiles(ids);
+    setFiles(prev => prev.filter(f => !ids.includes(f.id)));
+    const h = await api.getHero();
+    setHero(h);
+  };
+
   const handleUpdateSettings = async (newSettings: Partial<SystemSettings>) => {
     const s = await api.updateSettings(newSettings);
     setSettings(s);
@@ -202,38 +256,56 @@ export const App: React.FC = () => {
     setHero(h);
   };
 
+  const isAdmin = currentUser?.role === 'admin';
+
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-slate-900 flex flex-col font-sans selection:bg-rose-500 selection:text-white">
-      {/* Navigation */}
+    <div className="min-h-screen bg-[#f4f7f6] text-slate-800 flex flex-col font-sans selection:bg-emerald-600 selection:text-white">
+      {/* Navigation Ribbon (Outlook Style) */}
       <Navbar
         activeTab={activeTab}
         onTabChange={tab => setActiveTab(tab)}
         onOpenWriteModal={() => setWriteModalOpen(true)}
+        headerBrand={settings.headerBrand || 'fox'}
+        currentUser={currentUser}
+        onOpenAuthModal={() => setAuthModalOpen(true)}
+        onLogout={handleLogout}
+        isCollapsed={isHeaderCollapsed}
+        onToggleCollapse={() => setIsHeaderCollapsed(!isHeaderCollapsed)}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero banner shown on main tabs */}
+      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 ${
+        settings.themeLayout === 'wide' ? 'max-w-[1600px]' : (settings.themeLayout === 'compact' ? 'max-w-5xl' : 'max-w-7xl')
+      }`}>
+        {/* Hero banner shown on main exploration tabs */}
         {(activeTab === 'blog' || activeTab === 'books' || activeTab === 'shop') && (
-          <HeroBanner hero={hero} />
+          <HeroBanner
+            hero={hero}
+            isAdmin={isAdmin}
+            onUpdateHero={handleUpdateHero}
+          />
         )}
 
-        {/* Tab router views */}
+        {/* Tab views */}
         {activeTab === 'blog' && (
           <BlogView
             posts={posts}
             history={history}
+            currentUser={currentUser}
             onSelectPost={handleSelectPost}
             onLikePost={handleLikePost}
             onBookmarkPost={handleBookmarkPost}
             onClearHistory={handleClearHistory}
+            onDeletePost={handleDeletePost}
           />
         )}
 
         {activeTab === 'books' && (
           <BookshelfView
             books={books}
+            isAdmin={isAdmin}
             onUpdateProgress={handleUpdateBookProgress}
+            onRefresh={loadInitialData}
           />
         )}
 
@@ -245,9 +317,9 @@ export const App: React.FC = () => {
           />
         )}
 
-        {activeTab === 'gallery' && <GalleryView />}
+        {activeTab === 'gallery' && <GalleryView isAdmin={isAdmin} />}
 
-        {activeTab === 'media' && <MediaView />}
+        {activeTab === 'media' && <MediaView isAdmin={isAdmin} />}
 
         {activeTab === 'ai' && <AIView />}
 
@@ -256,8 +328,10 @@ export const App: React.FC = () => {
             files={files}
             storageUsed={hero.storageUsed}
             storageTotal={hero.storageTotal}
+            isAdmin={isAdmin}
             onUploadFile={handleUploadFile}
             onDeleteFile={handleDeleteFile}
+            onBatchDelete={handleBatchDeleteFiles}
           />
         )}
 
@@ -297,16 +371,22 @@ export const App: React.FC = () => {
         onBookmark={id => handleBookmarkPost(id)}
       />
 
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
+
       {/* Footer */}
-      <footer className="mt-auto border-t border-rose-100/80 bg-white/70 py-8 text-xs text-slate-500">
+      <footer className="mt-auto border-t border-emerald-900/10 bg-white/80 py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-800">fox2 · 白狐博客</span>
+            <span className="font-bold text-slate-800">{settings.headerBrand || 'fox'} · 现代多云博客</span>
             <span>© 2025 青丘夜雪 · 保留所有权利</span>
           </div>
-          <div className="flex items-center space-x-4">
-            <span>多云边缘驱动 (Cloudflare / 腾讯云 / 阿里云 / Vercel)</span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-semibold border border-emerald-200">
+          <div className="flex items-center space-x-3">
+            <span>微软 Outlook 绿白风格 (Emerald & White)</span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
               Zero LocalStorage
             </span>
           </div>

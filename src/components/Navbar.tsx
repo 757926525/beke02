@@ -1,146 +1,198 @@
 import React, { useState } from 'react';
 import {
   BookOpen,
-  Library,
+  Bookmark,
   ShoppingBag,
   Camera,
-  Music,
+  Film,
   Cpu,
   HardDrive,
-  Settings,
-  PenLine,
-  ExternalLink,
   Clock,
-  Menu,
-  X
+  Settings,
+  PenSquare,
+  ExternalLink,
+  ChevronUp,
+  ChevronDown,
+  Bell,
+  User,
+  LogOut,
+  LogIn
 } from 'lucide-react';
-import { NavTab } from '../types';
+import { NavTab, User as UserType } from '../types';
 
 interface NavbarProps {
   activeTab: NavTab;
   onTabChange: (tab: NavTab) => void;
   onOpenWriteModal: () => void;
+  headerBrand: string;
+  currentUser: UserType | null;
+  onOpenAuthModal: () => void;
+  onLogout: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  hasUnreadMessages?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   onTabChange,
   onOpenWriteModal,
+  headerBrand = 'fox',
+  currentUser,
+  onOpenAuthModal,
+  onLogout,
+  isCollapsed,
+  onToggleCollapse,
+  hasUnreadMessages = false,
 }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isAdmin = currentUser?.role === 'admin';
+  const isGuest = !currentUser;
 
-  const navItems: { id: NavTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'blog', label: '博客文章', icon: <BookOpen className="w-4 h-4" /> },
-    { id: 'books', label: '书架', icon: <Library className="w-4 h-4" /> },
-    { id: 'shop', label: '甄选文创商城', icon: <ShoppingBag className="w-4 h-4" /> },
-    { id: 'gallery', label: '光影视界', icon: <Camera className="w-4 h-4" /> },
-    { id: 'media', label: '媒体影音', icon: <Music className="w-4 h-4" /> },
-    { id: 'ai', label: '编程AI', icon: <Cpu className="w-4 h-4" /> },
-    { id: 'cloud', label: '网盘与 WebDAV', icon: <HardDrive className="w-4 h-4" /> },
-    { id: 'history', label: '足迹历程', icon: <Clock className="w-4 h-4" /> },
-    { id: 'admin', label: '系统管理设置', icon: <Settings className="w-4 h-4" /> },
+  const navItems = [
+    { id: 'blog' as NavTab, label: '博客文章', icon: BookOpen, show: true },
+    { id: 'books' as NavTab, label: '书架', icon: Bookmark, show: true },
+    { id: 'shop' as NavTab, label: '甄选文创', icon: ShoppingBag, show: true },
+    { id: 'gallery' as NavTab, label: '光影视界', icon: Camera, show: true },
+    { id: 'media' as NavTab, label: '媒体影音', icon: Film, show: true },
+    { id: 'ai' as NavTab, label: '编程 AI', icon: Cpu, badge: '智能', show: true },
+    // Cloud drive strictly hidden for non-admins
+    { id: 'cloud' as NavTab, label: '网盘与 WebDAV', icon: HardDrive, show: isAdmin },
+    { id: 'history' as NavTab, label: '足迹历程', icon: Clock, show: true },
+    // Admin tab strictly visible for admin only
+    { id: 'admin' as NavTab, label: '系统管理设置', icon: Settings, show: isAdmin },
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100 shadow-sm transition-all duration-200">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-emerald-900/10 shadow-xs transition-all duration-300">
+      {/* Top Outlook Style Header Ribbon */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onTabChange('blog')}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-emerald-600 flex items-center justify-center text-white font-bold shadow-md shadow-rose-200">
-              <span className="text-xl">🦊</span>
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg text-slate-900 tracking-tight">WhiteFox</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 font-medium border border-rose-200/60">fox2 边缘云</span>
+        <div className="flex items-center justify-between h-15">
+          {/* Brand & Status Ribbon */}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => onTabChange('blog')}
+              className="flex items-center space-x-2.5 text-left group focus:outline-none"
+            >
+              <div className="w-9 h-9 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/20 group-hover:bg-emerald-700 transition">
+                <span className="font-black text-lg tracking-wider">🦊</span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium">青丘夜雪 · 白狐极简数字空间</p>
+              <div className="flex flex-col">
+                <span className="font-bold text-lg text-slate-800 tracking-tight flex items-center gap-1.5">
+                  {headerBrand || 'fox'}
+                </span>
+                <span className="text-[11px] text-emerald-800 font-medium">青丘夜雪 · 绿白数字视界</span>
+              </div>
+            </button>
+
+            {/* Changed from fox2 边缘云 to 站内消息状态灯 */}
+            <div
+              title={hasUnreadMessages ? "有新的系统与站内回复消息" : "站内消息与通信通道畅通"}
+              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer transition ${
+                hasUnreadMessages
+                  ? 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}
+              onClick={() => {
+                if (isAdmin) onTabChange('admin');
+              }}
+            >
+              <span className={`w-2 h-2 rounded-full ${hasUnreadMessages ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+              <Bell className="w-3 h-3 text-emerald-600" />
+              <span>{hasUnreadMessages ? '有新消息' : '站内消息状态灯: 畅通'}</span>
             </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-1">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
+          {/* Right Header Controls: Write / Login / User profile / Collapse Toggle */}
+          <div className="flex items-center space-x-2.5">
+            {/* Write Button (Hidden for guests) */}
+            {!isGuest && (
+              <button
+                onClick={onOpenWriteModal}
+                className="hidden md:flex items-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-emerald-600 text-white font-medium text-xs shadow-xs hover:bg-emerald-700 active:scale-95 transition"
+              >
+                <PenSquare className="w-3.5 h-3.5" />
+                <span>发表文章</span>
+              </button>
+            )}
+
+            {/* User status & Auth */}
+            {currentUser ? (
+              <div className="flex items-center space-x-2 border-l border-emerald-100 pl-3">
+                <img
+                  src={currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
+                  alt={currentUser.username}
+                  className="w-7 h-7 rounded-full object-cover border border-emerald-300"
+                />
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-xs font-semibold text-slate-700 leading-tight">
+                    {currentUser.username}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-medium leading-none">
+                    {currentUser.role === 'admin' ? '唯一站长' : '注册用户'}
+                  </span>
+                </div>
                 <button
-                  key={item.id}
-                  onClick={() => onTabChange(item.id)}
-                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-rose-50 text-rose-600 font-semibold shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
+                  onClick={onLogout}
+                  title="退出登录"
+                  className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 transition"
                 >
-                  <span className={isActive ? 'text-rose-600' : 'text-slate-400'}>{item.icon}</span>
-                  <span>{item.label}</span>
+                  <LogOut className="w-4 h-4" />
                 </button>
-              );
-            })}
-          </nav>
+              </div>
+            ) : (
+              <button
+                onClick={onOpenAuthModal}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50 text-xs font-medium transition"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>登录 / 注册</span>
+              </button>
+            )}
 
-          {/* Actions: Write & External Links */}
-          <div className="hidden sm:flex items-center space-x-3">
+            {/* Header Collapse / Expand Toggle Button */}
             <button
-              onClick={onOpenWriteModal}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-sm transition-all shadow-emerald-200 active:scale-95"
+              onClick={onToggleCollapse}
+              title={isCollapsed ? "展开完整导航栏" : "收拢导航栏以沉浸阅读"}
+              className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition"
             >
-              <PenLine className="w-4 h-4" />
-              <span>发表文章</span>
-            </button>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-              title="GitHub 仓库"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
-
-          {/* Mobile hamburger */}
-          <div className="flex lg:hidden items-center space-x-2">
-            <button
-              onClick={onOpenWriteModal}
-              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-medium"
-            >
-              写文
-            </button>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-100 bg-white px-4 pt-2 pb-4 space-y-1 shadow-lg animate-fadeIn">
-          {navItems.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onTabChange(item.id);
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
-                  isActive
-                    ? 'bg-rose-50 text-rose-600 font-semibold'
-                    : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+      {/* Nav Tab Bar (Collapsible) */}
+      {!isCollapsed && (
+        <div className="border-t border-emerald-50 bg-[#fafcfb] transition-all duration-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="flex items-center space-x-1 sm:space-x-2 py-2 overflow-x-auto no-scrollbar">
+              {navItems.filter(item => item.show).map(item => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => onTabChange(item.id)}
+                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all ${
+                      isActive
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-emerald-800 hover:bg-emerald-50'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className={`text-[10px] px-1 py-0.2 rounded font-mono ${
+                        isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
       )}
     </header>

@@ -1,151 +1,248 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GalleryItem } from '../types';
-import { Camera, Heart, Maximize2, X, Download } from 'lucide-react';
+import {
+  Camera,
+  Upload,
+  Trash2,
+  Heart,
+  Plus,
+  Search,
+  LayoutGrid,
+  List,
+  Columns,
+  Grid3X3,
+  Download
+} from 'lucide-react';
+import { api } from '../api';
 
-export const GalleryView: React.FC = () => {
-  const [items, setItems] = useState<GalleryItem[]>([
-    {
-      id: 'gal-1',
-      title: '青丘夜雪 · 灵狐仙踪',
-      category: '风光纪实',
-      imageUrl: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=1200&q=80',
-      likes: 124,
-    },
-    {
-      id: 'gal-2',
-      title: '空山新雨 · 东方禅意',
-      category: '意境摄影',
-      imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
-      likes: 89,
-    },
-    {
-      id: 'gal-3',
-      title: '极客云端 · 数据星河',
-      category: '数码视界',
-      imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-      likes: 168,
-    },
-    {
-      id: 'gal-4',
-      title: '古卷残烛 · 文人书房',
-      category: '生活美学',
-      imageUrl: 'https://images.unsplash.com/photo-1507842229451-9f7917820bb3?auto=format&fit=crop&w=1200&q=80',
-      likes: 72,
-    },
-    {
-      id: 'gal-5',
-      title: '林深见鹿 · 幽谷微光',
-      category: '自然光影',
-      imageUrl: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80',
-      likes: 142,
-    },
-    {
-      id: 'gal-6',
-      title: '终端晨曦 · 代码之诗',
-      category: '数码视界',
-      imageUrl: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1200&q=80',
-      likes: 95,
-    },
-  ]);
+interface GalleryViewProps {
+  isAdmin?: boolean;
+}
 
-  const [activeCategory, setActiveCategory] = useState('全部');
-  const [previewItem, setPreviewItem] = useState<GalleryItem | null>(null);
+export const GalleryView: React.FC<GalleryViewProps> = ({ isAdmin }) => {
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'medium' | 'small' | 'large' | 'detail'>('medium');
+  const [search, setSearch] = useState('');
+  const [selectedPhoto, setSelectedPhoto] = useState<GalleryItem | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const categories = ['全部', '风光纪实', '意境摄影', '数码视界', '生活美学', '自然光影'];
-
-  const filtered = items.filter(
-    item => activeCategory === '全部' || item.category === activeCategory
-  );
-
-  const toggleLike = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setItems(prev =>
-      prev.map(i => (i.id === id ? { ...i, likes: i.likes + 1 } : i))
-    );
+  const fetchGallery = async () => {
+    try {
+      const data = await api.getGallery();
+      setGallery(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchGallery();
+  }, []);
+
+  const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const res = await api.uploadImage(file);
+      await api.addGalleryItem({
+        title: file.name.replace(/\.[^/.]+$/, ''),
+        imageUrl: res.url,
+        category: '东方美学'
+      });
+      fetchGallery();
+    } catch (err: any) {
+      alert('上传相册照片失败: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!confirm('确认从相册删除此照片？')) return;
+    await api.deleteGalleryItem(id);
+    setGallery(prev => prev.filter(p => p.id !== id));
+    if (selectedPhoto?.id === id) setSelectedPhoto(null);
+  };
+
+  const filteredPhotos = gallery.filter(p =>
+    p.title.toLowerCase().includes(search.toLowerCase()) ||
+    p.category.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top Controls Ribbon */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-emerald-900/10 shadow-xs">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">光影视界 · 视觉相册</h2>
-          <p className="text-xs text-slate-500 mt-0.5">多云对象存储分发 · 4K 高清画质呈现</p>
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Camera className="w-5 h-5 text-emerald-600" />
+            <span>光影视界 · 云相册资产库</span>
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            高清本地/云端相片无损存储，支持一键引入博客正文与多模式检视。
+          </p>
         </div>
 
-        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          {categories.map(cat => (
+        <div className="flex items-center space-x-2">
+          {isAdmin && (
+            <label className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 cursor-pointer shadow-xs transition">
+              <Upload className="w-3.5 h-3.5" />
+              <span>{uploading ? '上传中...' : '上传相片'}</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleUploadPhoto}
+                className="hidden"
+                disabled={uploading}
+              />
+            </label>
+          )}
+
+          {/* 4 View Modes */}
+          <div className="flex items-center border border-slate-200 rounded-md p-0.5 bg-slate-50">
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                activeCategory === cat
-                  ? 'bg-rose-500 text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
+              onClick={() => setViewMode('small')}
+              title="小图视图"
+              className={`p-1 rounded ${viewMode === 'small' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              {cat}
+              <Grid3X3 className="w-3.5 h-3.5" />
             </button>
-          ))}
+            <button
+              onClick={() => setViewMode('medium')}
+              title="中图视图"
+              className={`p-1 rounded ${viewMode === 'medium' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('large')}
+              title="大图卡片视图"
+              className={`p-1 rounded ${viewMode === 'large' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <Columns className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('detail')}
+              title="详细信息列表"
+              className={`p-1 rounded ${viewMode === 'detail' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Masonry / Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map(item => (
-          <div
-            key={item.id}
-            onClick={() => setPreviewItem(item)}
-            className="group relative rounded-2xl overflow-hidden bg-slate-100 border border-rose-100/60 shadow-xs cursor-pointer aspect-4/3"
-          >
-            <img
-              src={item.imageUrl}
-              alt={item.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              loading="lazy"
-            />
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 flex flex-col justify-between">
-              <span className="self-start text-[10px] font-bold px-2 py-0.5 rounded bg-black/60 text-white backdrop-blur-md">
-                {item.category}
-              </span>
+      {/* Photos Grid */}
+      {filteredPhotos.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-xl border border-dashed border-emerald-300">
+          <Camera className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+          <p className="text-xs text-slate-500">云相册暂无照片</p>
+        </div>
+      ) : viewMode === 'detail' ? (
+        /* Detail Table */
+        <div className="bg-white rounded-xl border border-emerald-900/10 overflow-hidden shadow-xs">
+          <table className="w-full text-left text-xs text-slate-600">
+            <thead className="bg-[#f8faf9] text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th className="py-2.5 px-3">缩略图</th>
+                <th className="py-2.5 px-3">相片名称</th>
+                <th className="py-2.5 px-3">专栏分类</th>
+                <th className="py-2.5 px-3">上传日期</th>
+                <th className="py-2.5 px-3 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredPhotos.map(item => (
+                <tr key={item.id} className="hover:bg-emerald-50/50 transition">
+                  <td className="py-2 px-3">
+                    <img src={item.imageUrl} alt={item.title} className="w-10 h-10 rounded object-cover" />
+                  </td>
+                  <td className="py-2 px-3 font-semibold text-slate-800">{item.title}</td>
+                  <td className="py-2 px-3">
+                    <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">{item.category}</span>
+                  </td>
+                  <td className="py-2 px-3 text-slate-400">{item.uploadedAt || '2025-05-20'}</td>
+                  <td className="py-2 px-3 text-right">
+                    {isAdmin && (
+                      <button
+                        onClick={e => handleDeletePhoto(item.id, e)}
+                        className="p-1 text-slate-400 hover:text-rose-600"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        /* Visual Photo Grids */
+        <div className={
+          viewMode === 'small'
+            ? 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3'
+            : (viewMode === 'large'
+              ? 'grid grid-cols-1 sm:grid-cols-2 gap-6'
+              : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4')
+        }>
+          {filteredPhotos.map(photo => (
+            <div
+              key={photo.id}
+              onClick={() => setSelectedPhoto(photo)}
+              className="group relative bg-white rounded-lg border border-emerald-900/10 overflow-hidden shadow-2xs hover:shadow-md cursor-pointer transition"
+            >
+              <div className={`w-full overflow-hidden ${viewMode === 'small' ? 'h-28' : (viewMode === 'large' ? 'h-72' : 'h-48')}`}>
+                <img
+                  src={photo.imageUrl}
+                  alt={photo.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                />
+              </div>
 
-              <div className="flex items-center justify-between text-white">
-                <div>
-                  <h4 className="text-sm font-bold truncate">{item.title}</h4>
-                </div>
-                <button
-                  onClick={e => toggleLike(item.id, e)}
-                  className="flex items-center space-x-1 text-xs px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md hover:bg-rose-500 transition-colors"
-                >
-                  <Heart className="w-3.5 h-3.5 fill-current" />
-                  <span>{item.likes}</span>
-                </button>
+              <div className="p-2.5 flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-800 truncate" title={photo.title}>
+                  {photo.title}
+                </span>
+                {isAdmin && (
+                  <button
+                    onClick={e => handleDeletePhoto(photo.id, e)}
+                    className="p-1 text-slate-400 hover:text-rose-600"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Lightbox Modal */}
-      {previewItem && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center">
-            <button
-              onClick={() => setPreviewItem(null)}
-              className="absolute top-2 right-2 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 z-10"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <img
-              src={previewItem.imageUrl}
-              alt={previewItem.title}
-              className="max-h-[80vh] w-auto rounded-2xl object-contain shadow-2xl"
-            />
-
-            <div className="mt-4 text-center text-white">
-              <h3 className="text-base font-bold">{previewItem.title}</h3>
-              <p className="text-xs text-slate-400 mt-1">{previewItem.category} · 获赞 {previewItem.likes}</p>
+      {selectedPhoto && (
+        <div
+          onClick={() => setSelectedPhoto(null)}
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs"
+        >
+          <div className="max-w-4xl max-h-[90vh] bg-white rounded-xl overflow-hidden shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+            <img src={selectedPhoto.imageUrl} alt={selectedPhoto.title} className="max-h-[75vh] object-contain bg-black" />
+            <div className="p-4 flex items-center justify-between text-xs">
+              <div>
+                <h3 className="font-bold text-sm text-slate-800">{selectedPhoto.title}</h3>
+                <span className="text-slate-400">{selectedPhoto.category}</span>
+              </div>
+              <button
+                onClick={() => setSelectedPhoto(null)}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded"
+              >
+                关闭
+              </button>
             </div>
           </div>
         </div>

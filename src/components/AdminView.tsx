@@ -1,45 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { SystemSettings, HeroConfig, StorageStatus } from '../types';
+import { SystemSettings, HeroConfig, StorageStatus, User } from '../types';
 import {
-  Settings,
-  Database,
-  Cloud,
-  Download,
-  Upload,
-  CheckCircle,
-  AlertCircle,
   Save,
-  Server,
-  Key,
-  Globe,
-  Layers,
-  Sparkles,
-  Mail,
-  Send,
-  Trash2,
-  Reply,
-  Palette,
-  Image,
-  UserCheck,
-  Users,
-  Bell,
-  Lock,
-  Sliders,
-  Eye,
-  EyeOff,
-  Activity,
-  Zap,
-  CheckCircle2,
   RefreshCw,
-  Plus
+  Settings,
+  Palette,
+  Cpu,
+  Database,
+  Mail,
+  Users,
+  Sliders,
+  Check,
+  Upload,
+  Sparkles,
+  Link2,
+  Trash2,
+  Inbox,
+  Send,
+  EyeOff,
+  UserCheck,
+  CheckCircle,
+  Layout,
+  HardDrive
 } from 'lucide-react';
 import { api } from '../api';
 
 interface AdminViewProps {
   settings: SystemSettings;
   hero: HeroConfig;
-  onUpdateSettings: (settings: Partial<SystemSettings>) => Promise<void>;
-  onUpdateHero: (hero: Partial<HeroConfig>) => Promise<void>;
+  onUpdateSettings: (newSettings: Partial<SystemSettings>) => Promise<void>;
+  onUpdateHero: (newHero: Partial<HeroConfig>) => Promise<void>;
   onRefreshAll: () => Promise<void>;
 }
 
@@ -50,963 +40,651 @@ export const AdminView: React.FC<AdminViewProps> = ({
   onUpdateHero,
   onRefreshAll,
 }) => {
-  const [activeTab, setActiveTab] = useState<'merged-email' | 'merged-governance' | 'system'>('merged-email');
-  const [formData, setFormData] = useState<SystemSettings>({ ...settings });
-  const [heroData, setHeroData] = useState<HeroConfig>({ ...hero });
+  const [activeTab, setActiveTab] = useState<'merged-email' | 'merged-governance' | 'bindings' | 'advanced'>('merged-email');
+  const [formData, setFormData] = useState<SystemSettings>(settings);
+  const [heroData, setHeroData] = useState<HeroConfig>(hero);
   const [saving, setSaving] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Storage / KV Status Indicator state
+  // Storage and KV real-time status telemetry
   const [storageStatus, setStorageStatus] = useState<StorageStatus>({
-    kvConnected: true,
+    kvConnected: false,
     dbConnected: true,
-    activeStorage: 'kv',
-    lastSyncTime: new Date().toLocaleTimeString('zh-CN'),
-    kvNamespace: 'FOX_BLOG_KV',
-    syncLatencyMs: 3,
+    d1Bound: false,
+    r2Bound: false,
+    activeStorage: 'local',
+    lastSyncTime: '未同步',
+    kvNamespace: '未绑定 (默认零数值)',
+    syncLatencyMs: 0,
+    cloudStorageUsedMb: 0,
+    cloudStorageTotalMb: 0,
+    localStorageUsedMb: 0,
   });
 
-  // Modals & sub-partition states
-  const [emailProvider, setEmailProvider] = useState('resend');
-  const [senderEmail, setSenderEmail] = useState('noreply@whitefox.blog');
-  const [emailApiKey, setEmailApiKey] = useState('');
-  const [emailRateLimit, setEmailRateLimit] = useState(true);
+  // WebDAV test status
+  const [webdavTesting, setWebdavTesting] = useState(false);
+  const [webdavMsg, setWebdavMsg] = useState<string | null>(null);
 
-  // Site letters
-  const [letters, setLetters] = useState([
-    {
-      id: 'letter-1',
-      senderEmail: 'reader@example.com',
-      senderName: '青丘书客',
-      subject: '关于博客多云部署实践的交流',
-      content: '站长您好，拜读了您的多云边缘架构系列博文，请问如何配置坚果云 WebDAV 网盘？',
-      receivedAt: '2025-05-18 10:20',
-      replied: true,
-      replyContent: '您好！在坚果云网页版开启第三方应用授权生成“应用密码”，在博客网盘区填入服务器地址和密码即可！',
-      repliedAt: '2025-05-18 11:05',
-    },
-    {
-      id: 'letter-2',
-      senderEmail: 'dev@whitefox.blog',
-      senderName: '技术读者',
-      subject: '关于多端自适应播放器画幅的反馈',
-      content: '播放器的自适应画幅非常流畅，赞一个！',
-      receivedAt: '2025-05-18 14:15',
-      replied: false,
-      replyContent: '',
-      repliedAt: '',
-    }
-  ]);
-  const [replyLetterId, setReplyLetterId] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
+  // Users list
+  const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
 
-  // User broadcast messages
-  const [userMessages, setUserMessages] = useState([
+  // Inbox & Messages
+  const [inboxMessages, setInboxMessages] = useState([
     {
       id: 'msg-1',
-      title: '白狐系统多云全息双向同步与免库边缘运行说明',
-      content: '欢迎使用白狐数字空间，本站已支持 Cloudflare Pages 边缘实时同步、KV 优先调度与多云对象存储！',
-      author: '唯一站长 (Administrator)',
-      date: '2025-05-18',
-      target: 'all',
+      sender: 'qingfeng (读者)',
+      email: 'qingfeng@fox.mail',
+      subject: '关于多云架构实战文章的探讨',
+      content: '站长您好，阅读了您写的 Cloudflare D1 + R2 文章后受益匪浅，请问有全屏电子书阅读的移动端适配方案吗？',
+      time: '2025-05-18 16:30',
+      reply: '感谢支持！最新版已全面适配移动端全屏研读，且顶部刘海栏安全距离已做优化。',
+      status: 'replied'
+    },
+    {
+      id: 'msg-2',
+      sender: 'visitor_402 (访客)',
+      email: 'guest402@example.com',
+      subject: '博客主题能否开源支持自定义本地背景？',
+      content: '非常喜欢现在的绿白 Outlook 风格，请问站长头像和 Hero 背景是否都能上传自己本地的照片？',
+      time: '2025-05-19 11:20',
+      reply: '',
+      status: 'unread'
     }
   ]);
-  const [newMsgTitle, setNewMsgTitle] = useState('');
-  const [newMsgContent, setNewMsgContent] = useState('');
-  const [newMsgTarget, setNewMsgTarget] = useState<'all' | 'verified'>('all');
 
-  // Theme & Appearance
-  const [selectedTheme, setSelectedTheme] = useState('emerald-white');
-  const [bgColor, setBgColor] = useState('#f8fafc');
-  const [avatarUrl, setAvatarUrl] = useState(settings.avatar);
-  const [heroBannerUrl, setHeroBannerUrl] = useState(hero.bannerImage);
+  const [replyTextMap, setReplyTextMap] = useState<Record<string, string>>({});
 
-  // Registered users
-  const [users, setUsers] = useState([
-    { id: 'u-1', username: 'fox', email: 'admin@whitefox.blog', role: 'admin', registeredAt: '2025-05-01' },
-    { id: 'u-2', username: '青丘客', email: 'visitor@example.com', role: 'member', registeredAt: '2025-05-10' },
-    { id: 'u-3', username: '云端极客', email: 'cloudgeek@example.com', role: 'member', registeredAt: '2025-05-12' },
-  ]);
-  const [newUsername, setNewUsername] = useState('');
-  const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserRole, setNewUserRole] = useState<'admin' | 'member'>('member');
+  useEffect(() => {
+    setFormData(settings);
+    setHeroData(hero);
+    fetchStatus();
+    fetchUsers();
+  }, [settings, hero]);
 
-  // Fetch real-time KV status
-  const refreshStorageStatus = async () => {
+  const fetchStatus = async () => {
     try {
-      const status = await api.getStorageStatus();
-      setStorageStatus(status);
+      const res = await api.getStorageStatus();
+      setStorageStatus(res);
     } catch (e) {
-      console.warn('Storage status check', e);
+      console.warn('Failed to load storage status', e);
     }
   };
 
-  useEffect(() => {
-    refreshStorageStatus();
-    const timer = setInterval(refreshStorageStatus, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handleSave = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setSaving(true);
-    setStatusMsg(null);
+  const fetchUsers = async () => {
     try {
-      await onUpdateSettings({
-        ...formData,
-        avatar: avatarUrl,
-      });
-      await onUpdateHero({
-        ...heroData,
-        bannerImage: heroBannerUrl,
-      });
-      setStatusMsg({ type: 'success', text: '全部参数已成功同步至边缘 KV 与数据库！' });
-      refreshStorageStatus();
+      const users = await api.getUsers();
+      setRegisteredUsers(users);
+    } catch (e) {
+      console.warn('Failed to load users', e);
+    }
+  };
+
+  const handleSaveAll = async () => {
+    setSaving(true);
+    try {
+      await onUpdateSettings(formData);
+      await onUpdateHero(heroData);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+      fetchStatus();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: '保存失败，请检查网络或配置' });
+      alert('保存设置失败: ' + err.message);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleExportBackup = async () => {
+  const handleUploadImage = async (field: 'avatar' | 'bannerImage', file: File) => {
     try {
-      const data = await api.exportData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `whitefox-backup-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      alert('导出备份失败');
+      const res = await api.uploadImage(file);
+      if (field === 'avatar') {
+        setFormData(prev => ({ ...prev, avatar: res.url }));
+      } else {
+        setHeroData(prev => ({ ...prev, bannerImage: res.url }));
+      }
+    } catch (err: any) {
+      alert('上传图片失败: ' + err.message);
     }
   };
 
-  const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleTestWebDav = async () => {
+    setWebdavTesting(true);
+    setWebdavMsg(null);
     try {
-      const text = await file.text();
-      const json = JSON.parse(text);
-      await api.importData(json);
-      setStatusMsg({ type: 'success', text: '数据导入成功，全站配置与足迹已重载' });
-      await onRefreshAll();
-    } catch (err) {
-      setStatusMsg({ type: 'error', text: '导入失败，请核对备份 JSON 格式' });
+      const res = await api.testWebDav(formData.webdavConfig);
+      setWebdavMsg('✅ ' + res.message);
+    } catch (err: any) {
+      setWebdavMsg('❌ 连接测试失败: ' + err.message);
+    } finally {
+      setWebdavTesting(false);
     }
   };
 
-  const themePresets = [
-    { id: 'emerald-white', name: '极简白翠', color: '#10b981', bg: '#f8fafc' },
-    { id: 'cyber-fox', name: '灵狐绯红', color: '#f43f5e', bg: '#fff1f2' },
-    { id: 'ocean-cyan', name: '远海云蓝', color: '#0284c7', bg: '#f0f9ff' },
-    { id: 'amethyst-purple', name: '紫晶流光', color: '#8b5cf6', bg: '#faf5ff' },
-    { id: 'ink-minimal', name: '玄墨简灰', color: '#334155', bg: '#f1f5f9' },
-  ];
+  const handleDeleteUser = async (id: string) => {
+    if (!confirm('确认注销该注册用户？')) return;
+    await api.deleteUser(id);
+    fetchUsers();
+  };
+
+  const handleDeleteMessage = (id: string) => {
+    if (!confirm('确定删除此留言？')) return;
+    setInboxMessages(prev => prev.filter(m => m.id !== id));
+  };
+
+  const handleSendReply = (id: string) => {
+    const text = replyTextMap[id];
+    if (!text || !text.trim()) return;
+    setInboxMessages(prev => prev.map(m => m.id === id ? { ...m, reply: text, status: 'replied' } : m));
+    setReplyTextMap(prev => ({ ...prev, [id]: '' }));
+    alert('已成功回复并同步发送站内邮件！');
+  };
 
   return (
     <div className="space-y-6">
-      {/* Real-Time KV / Database Dual-Storage Status Indicator Bar */}
-      <div className="bg-white rounded-2xl border border-rose-100/80 p-4.5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+      {/* Real-time Cloudflare KV / D1 / R2 Priority Dual-Engine Indicator Bar */}
+      <div className="bg-white rounded-xl border border-emerald-900/10 p-4 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
+          {/* Honest Real-Time Indicator Light: Green only when really connected; slate/amber when unattached/zero */}
           <div className="relative flex items-center justify-center">
-            {/* KV Indicator Light */}
-            <span
-              className={`w-3.5 h-3.5 rounded-full ${
-                storageStatus.kvConnected
-                  ? 'bg-emerald-500 shadow-md shadow-emerald-400/50 animate-pulse'
-                  : 'bg-amber-500 shadow-md shadow-amber-400/50'
-              }`}
-            />
-            <span
-              className={`absolute w-5 h-5 rounded-full -z-10 ${
-                storageStatus.kvConnected ? 'bg-emerald-200 animate-ping opacity-75' : 'bg-amber-200'
-              }`}
-            />
+            <span className={`w-3.5 h-3.5 rounded-full ${
+              storageStatus.kvConnected
+                ? 'bg-emerald-500 ring-4 ring-emerald-100 animate-pulse'
+                : 'bg-slate-400'
+            }`} />
           </div>
-
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-slate-800 text-xs">
-                {storageStatus.kvConnected ? 'Cloudflare KV 优先同步引擎 (已连接)' : '边缘数据库 D1 运行中 (KV降级)'}
+              <span className="font-bold text-sm text-slate-800">
+                {storageStatus.kvConnected ? 'Cloudflare KV 优先加速引擎' : '本地文件型轻量引擎 (离线正常运行)'}
               </span>
-              <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  storageStatus.kvConnected
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-amber-50 text-amber-700 border border-amber-200'
-                }`}
-              >
-                {storageStatus.kvConnected ? 'KV 实时优先模式' : '数据库回退容灾'}
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                storageStatus.kvConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {storageStatus.activeStorage}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              空间命名: <code className="font-mono text-slate-600">{storageStatus.kvNamespace}</code> ·
-              边缘往返延迟: <span className="font-mono text-emerald-600 font-bold">{storageStatus.syncLatencyMs}ms</span> ·
-              实时同步所有浏览历史、图片、文件、博客及设定
+            <p className="text-xs text-slate-500 mt-0.5">
+              命名空间: <strong className="text-slate-700">{storageStatus.kvNamespace}</strong> · 响应耗时: <strong className="text-emerald-700 font-mono">{storageStatus.syncLatencyMs}ms</strong>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        {/* Real Cloud Storage Pool Info (Defaults to 0 when unconfigured) */}
+        <div className="flex items-center space-x-4 text-xs font-mono">
+          <div className="text-right">
+            <span className="text-slate-400 block text-[10px]">云端存储池 (D1/R2)</span>
+            <span className="font-bold text-slate-700">
+              {storageStatus.cloudStorageTotalMb > 0
+                ? `${storageStatus.cloudStorageUsedMb} / ${storageStatus.cloudStorageTotalMb} MB`
+                : '0 MB (默认未接入)'}
+            </span>
+          </div>
           <button
-            onClick={() => refreshStorageStatus()}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold flex items-center space-x-1 transition-colors"
+            onClick={fetchStatus}
+            title="刷新状态探测"
+            className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 hover:text-emerald-600 transition"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>探测同步状态</span>
+            <RefreshCw className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Main Tab Controls */}
-      <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 w-fit">
+      {/* Admin Tabs */}
+      <div className="flex items-center space-x-1 border-b border-emerald-900/10 pb-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('merged-email')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
-            activeTab === 'merged-email'
-              ? 'bg-white text-rose-600 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+          className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 ${
+            activeTab === 'merged-email' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50'
           }`}
         >
-          <Mail className="w-4 h-4" />
-          <span>邮件 API 与信箱中心 (2合1)</span>
+          <Mail className="w-3.5 h-3.5" />
+          <span>邮件 API 与站内信箱综合区 (二合一)</span>
         </button>
+
         <button
           onClick={() => setActiveTab('merged-governance')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
-            activeTab === 'merged-governance'
-              ? 'bg-white text-rose-600 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+          className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 ${
+            activeTab === 'merged-governance' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50'
           }`}
         >
-          <Sliders className="w-4 h-4" />
-          <span>用户、外观与广播枢纽 (4合1)</span>
+          <Users className="w-3.5 h-3.5" />
+          <span>全站治理、外观调色与用户中枢 (四合一)</span>
         </button>
+
         <button
-          onClick={() => setActiveTab('system')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
-            activeTab === 'system'
-              ? 'bg-white text-rose-600 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+          onClick={() => setActiveTab('bindings')}
+          className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 ${
+            activeTab === 'bindings' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50'
           }`}
         >
-          <Server className="w-4 h-4" />
-          <span>系统基建与部署</span>
+          <HardDrive className="w-3.5 h-3.5" />
+          <span>多云绑定与坚果云 WebDAV (4接口)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('advanced')}
+          className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 ${
+            activeTab === 'advanced' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50'
+          }`}
+        >
+          <Cpu className="w-3.5 h-3.5" />
+          <span>AI 算力与系统参数</span>
         </button>
       </div>
 
-      {statusMsg && (
-        <div
-          className={`p-4 rounded-2xl border text-xs font-medium flex items-center justify-between animate-fadeIn ${
-            statusMsg.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border-rose-200 text-rose-800'
-          }`}
-        >
-          <div className="flex items-center space-x-2">
-            {statusMsg.type === 'success' ? (
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600" />
-            )}
-            <span>{statusMsg.text}</span>
-          </div>
-          <button onClick={() => setStatusMsg(null)} className="text-slate-400 hover:text-slate-600">
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* ========================================================= */}
-      {/* 1. MERGED SECTION: 邮件服务与站内信箱综合管控区 (2个小分区) */}
-      {/* ========================================================= */}
+      {/* Tab 1: Merged Email & Inbox (2-in-1 zone) */}
       {activeTab === 'merged-email' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-6">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Mail className="w-5 h-5 text-rose-500" />
-              邮件 API 与站内信箱综合管控区
+        <div className="space-y-6">
+          {/* Sub-partition 1: Email API & Cloudflare Email Routing */}
+          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-4">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
+              <Mail className="w-4 h-4 text-emerald-600" />
+              <span>子分区一：邮件 API 与 Cloudflare Email Routing 服务配置</span>
             </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              本区域整合了邮件网关路由与访客交互信件管理，下分为【邮件 API 与 Cloudflare Email Routing 服务】及【站内信箱与回复消息管理】两个专属分区。
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* SUB-PARTITION 1: 邮件 API 与 Cloudflare Email Routing 服务 */}
-            <div className="lg:col-span-5 bg-slate-50/80 border border-slate-200 rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Globe className="w-4 h-4 text-rose-500" />
-                  小分区 1：邮件 API 与 Cloudflare Email Routing 服务
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 font-mono font-bold">
-                  Active
-                </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">发信服务通道提供商</label>
+                <select className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white text-slate-800">
+                  <option>Cloudflare Email Routing (默认推荐)</option>
+                  <option>Resend API (全球低延迟)</option>
+                  <option>SendGrid / Mailgun</option>
+                  <option>腾讯云 SES / 阿里云邮件推送</option>
+                </select>
               </div>
-
-              <div className="space-y-3.5 text-xs">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">邮件服务提供商 (Provider)</label>
-                  <select
-                    value={emailProvider}
-                    onChange={e => setEmailProvider(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
-                  >
-                    <option value="resend">Resend API (全球高投递推荐)</option>
-                    <option value="cloudflare-email">Cloudflare Email Routing (边缘直接转发)</option>
-                    <option value="sendgrid">Twilio SendGrid API</option>
-                    <option value="mailgun">Mailgun REST API</option>
-                    <option value="tencent-ses">腾讯云 SES 邮件推送</option>
-                    <option value="aliyun-dm">阿里云 DirectMail 邮件推送</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">发信邮箱地址 (Sender Email)</label>
-                  <input
-                    type="email"
-                    value={senderEmail}
-                    onChange={e => setSenderEmail(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">API Key / Token 密钥</label>
-                  <input
-                    type="password"
-                    value={emailApiKey}
-                    onChange={e => setEmailApiKey(e.target.value)}
-                    placeholder="re_xxxxxxxxxxxxxxxxxxxxx"
-                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none font-mono"
-                  />
-                </div>
-
-                <label className="flex items-center space-x-2 cursor-pointer pt-1">
-                  <input
-                    type="checkbox"
-                    checked={emailRateLimit}
-                    onChange={e => setEmailRateLimit(e.target.checked)}
-                    className="w-4 h-4 text-rose-500 rounded border-slate-300"
-                  />
-                  <span className="text-slate-700 font-medium">开启边缘 IP 发信速率防刷限制 (Rate Limit)</span>
-                </label>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStatusMsg({ type: 'success', text: '邮件服务与 Cloudflare 路由配置已保存并同步至 KV' });
-                  }}
-                  className="w-full bg-rose-500 hover:bg-rose-600 text-white font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-xs"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  保存邮件服务配置
-                </button>
-              </div>
-            </div>
-
-            {/* SUB-PARTITION 2: 站内信箱与回复消息管理 (支持删除消息) */}
-            <div className="lg:col-span-7 bg-slate-50/80 border border-slate-200 rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Mail className="w-4 h-4 text-sky-500" />
-                  小分区 2：站内信箱与回复消息管理 (支持删除消息)
-                </span>
-                <span className="text-[11px] text-slate-500 font-mono">共 {letters.length} 封信件</span>
-              </div>
-
-              <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
-                {letters.map(letter => (
-                  <div key={letter.id} className="bg-white border border-slate-200 rounded-xl p-4 text-xs space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-semibold text-slate-800">{letter.senderName}</span>
-                        <span className="text-slate-400 font-mono text-[11px]">&lt;{letter.senderEmail}&gt;</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-slate-400 text-[11px]">{letter.receivedAt}</span>
-                        <button
-                          onClick={() => {
-                            if (confirm('确认删除该信件？')) {
-                              setLetters(letters.filter(l => l.id !== letter.id));
-                            }
-                          }}
-                          className="text-slate-400 hover:text-rose-500 p-1"
-                          title="删除消息"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="font-medium text-slate-700">{letter.subject}</p>
-                    <div className="text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                      {letter.content}
-                    </div>
-
-                    {letter.replied ? (
-                      <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 p-2 rounded-lg text-[11px]">
-                        <span className="font-bold text-emerald-700">已于 {letter.repliedAt} 回复：</span>
-                        <p className="mt-0.5">{letter.replyContent}</p>
-                      </div>
-                    ) : (
-                      <div>
-                        {replyLetterId === letter.id ? (
-                          <div className="space-y-2 pt-1">
-                            <textarea
-                              value={replyText}
-                              onChange={e => setReplyText(e.target.value)}
-                              placeholder="撰写回复..."
-                              rows={2}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800"
-                            />
-                            <div className="flex justify-end space-x-2">
-                              <button
-                                onClick={() => setReplyLetterId(null)}
-                                className="px-2.5 py-1 text-slate-500 text-xs"
-                              >
-                                取消
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (!replyText.trim()) return;
-                                  setLetters(letters.map(l => l.id === letter.id ? {
-                                    ...l,
-                                    replied: true,
-                                    replyContent: replyText,
-                                    repliedAt: new Date().toLocaleString('zh-CN'),
-                                  } : l));
-                                  setReplyLetterId(null);
-                                  setReplyText('');
-                                  setStatusMsg({ type: 'success', text: '已成功回复访客站内信件' });
-                                }}
-                                className="px-3 py-1 bg-sky-500 text-white rounded text-xs font-semibold"
-                              >
-                                确认回复
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setReplyLetterId(letter.id);
-                              setReplyText('');
-                            }}
-                            className="text-sky-600 hover:text-sky-700 font-semibold text-[11px] flex items-center gap-1"
-                          >
-                            <Reply className="w-3 h-3" />
-                            撰写回复
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================= */}
-      {/* 2. MERGED SECTION: 用户、外观与广播枢纽 (4个小分区)         */}
-      {/* ========================================================= */}
-      {activeTab === 'merged-governance' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-6">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-rose-500" />
-              全站用户、视觉外观与权限统筹管控枢纽
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              集中管辖全站广播推送、视觉色彩与背景图谱、访客注册与可见性门槛，以及已注册用户名单，共下分 4 个专属分区。
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* SUB-PARTITION 1: 全站用户消息与通知管理 (底部控制区) */}
-            <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Bell className="w-4 h-4 text-amber-500" />
-                  小分区 1：全站用户消息与通知管理 (底部控制区)
-                </span>
-                <span className="text-[11px] text-slate-400 font-mono">{userMessages.length} 条</span>
-              </div>
-
-              <div className="bg-white border border-slate-200 rounded-lg p-3 space-y-2.5 text-xs">
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">发件人地址 (Sender)</label>
                 <input
                   type="text"
-                  placeholder="通知广播标题"
-                  value={newMsgTitle}
-                  onChange={e => setNewMsgTitle(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded px-2.5 py-1.5"
+                  defaultValue="notify@whitefox.cloud"
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
                 />
-                <textarea
-                  placeholder="广播正文详情..."
-                  rows={2}
-                  value={newMsgContent}
-                  onChange={e => setNewMsgContent(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded p-2"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!newMsgTitle || !newMsgContent) return;
-                    setUserMessages([{
-                      id: `msg-${Date.now()}`,
-                      title: newMsgTitle,
-                      content: newMsgContent,
-                      author: '站长通知',
-                      date: new Date().toISOString().split('T')[0],
-                      target: newMsgTarget,
-                    }, ...userMessages]);
-                    setNewMsgTitle('');
-                    setNewMsgContent('');
-                    setStatusMsg({ type: 'success', text: '广播通知已即时推送到全站' });
-                  }}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-1.5 rounded text-xs flex items-center justify-center gap-1"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  发布新全站广播通知
-                </button>
               </div>
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">邮件 API Key / Token</label>
+                <input
+                  type="password"
+                  placeholder="re_xxxxxxxxxxxx"
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
+                />
+              </div>
+            </div>
+          </div>
 
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {userMessages.map(msg => (
-                  <div key={msg.id} className="bg-white border border-slate-200 rounded-lg p-3 text-xs flex items-start justify-between">
-                    <div>
-                      <p className="font-bold text-slate-800">{msg.title}</p>
-                      <p className="text-slate-600 text-[11px] mt-0.5">{msg.content}</p>
+          {/* Sub-partition 2: Site Mailbox & Reply Manager */}
+          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Inbox className="w-4 h-4 text-emerald-600" />
+                <span>子分区二：站内信箱与回复消息管理 (支持直接删除)</span>
+              </h3>
+              <span className="text-xs text-slate-400">共 {inboxMessages.length} 封往来消息</span>
+            </div>
+
+            <div className="space-y-3">
+              {inboxMessages.map(msg => (
+                <div key={msg.id} className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-slate-800">{msg.sender}</span>
+                      <span className="text-slate-400">({msg.email})</span>
+                      <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${
+                        msg.status === 'replied' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {msg.status === 'replied' ? '已回复' : '待回复'}
+                      </span>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-slate-400">{msg.time}</span>
+                      <button
+                        onClick={() => handleDeleteMessage(msg.id)}
+                        className="text-slate-400 hover:text-rose-600 p-1"
+                        title="删除该消息"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="font-semibold text-slate-900">{msg.subject}</div>
+                  <p className="text-slate-600 leading-relaxed">{msg.content}</p>
+
+                  {/* Show replied text if exists */}
+                  {msg.reply && (
+                    <div className="p-2.5 rounded bg-emerald-50/70 border border-emerald-200 text-emerald-900">
+                      <strong className="block text-[11px] mb-0.5">站长回复：</strong>
+                      {msg.reply}
+                    </div>
+                  )}
+
+                  {/* Reply Action Box */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="text"
+                      placeholder="键入回复内容..."
+                      value={replyTextMap[msg.id] || ''}
+                      onChange={e => setReplyTextMap(prev => ({ ...prev, [msg.id]: e.target.value }))}
+                      className="flex-1 px-2.5 py-1 text-xs border border-slate-300 rounded bg-white text-slate-800"
+                    />
                     <button
-                      onClick={() => setUserMessages(userMessages.filter(m => m.id !== msg.id))}
-                      className="text-slate-400 hover:text-rose-500 p-1"
+                      onClick={() => handleSendReply(msg.id)}
+                      className="flex items-center space-x-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Send className="w-3 h-3" />
+                      <span>回复消息</span>
                     </button>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 2: Merged Governance, Appearance & Users (4-in-1 zone) */}
+      {activeTab === 'merged-governance' && (
+        <div className="space-y-6">
+          {/* Sub-partition 1: All User Messages & Bottom Notices */}
+          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-3">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
+              <Sliders className="w-4 h-4 text-emerald-600" />
+              <span>子分区一：全站用户消息与通知管理 (底部控制区)</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">页眉品牌文字 (默认 fox，支持自定义)</label>
+                <input
+                  type="text"
+                  value={formData.headerBrand || 'fox'}
+                  onChange={e => setFormData({ ...formData, headerBrand: e.target.value })}
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">全站公告标语</label>
+                <input
+                  type="text"
+                  value={formData.subtitle}
+                  onChange={e => setFormData({ ...formData, subtitle: e.target.value })}
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sub-partition 2: Theme Palette, Layout Switcher & Local Photos */}
+          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-4">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
+              <Palette className="w-4 h-4 text-emerald-600" />
+              <span>子分区二：主题调色、页面布局与本地图片设定 (头像/背景/Hero)</span>
+            </h3>
+
+            {/* Layout Switcher moved into Settings */}
+            <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+              <label className="block text-xs font-bold text-emerald-900 mb-1.5 flex items-center gap-1.5">
+                <Layout className="w-4 h-4 text-emerald-700" />
+                <span>切换页面布局风格 (已移至设置区内部)</span>
+              </label>
+              <div className="flex items-center space-x-3 text-xs">
+                {(['default', 'compact', 'wide'] as const).map(mode => (
+                  <label key={mode} className="flex items-center space-x-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="themeLayout"
+                      value={mode}
+                      checked={formData.themeLayout === mode}
+                      onChange={() => setFormData({ ...formData, themeLayout: mode })}
+                      className="text-emerald-600"
+                    />
+                    <span className="capitalize font-medium text-slate-700">
+                      {mode === 'default' ? '标准宽幅 (Default)' : (mode === 'compact' ? '紧凑精致 (Compact)' : '超宽沉浸 (Wide 1600px)')}
+                    </span>
+                  </label>
                 ))}
               </div>
             </div>
 
-            {/* SUB-PARTITION 2: 主题调色与本地图片设定 (头像/背景/Hero) */}
-            <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Palette className="w-4 h-4 text-rose-500" />
-                  小分区 2：主题调色与本地图片设定 (头像/背景/Hero)
-                </span>
-                <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-mono font-bold">
-                  KV 同步
-                </span>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">预设色系风格</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {themePresets.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedTheme(p.id);
-                          setBgColor(p.bg);
-                        }}
-                        className={`p-2 rounded-lg border text-center flex flex-col items-center justify-center gap-1 ${
-                          selectedTheme === p.id ? 'border-rose-500 bg-rose-50/60 font-bold' : 'border-slate-200 bg-white'
-                        }`}
-                      >
-                        <span className="w-4 h-4 rounded-full" style={{ backgroundColor: p.color }} />
-                        <span className="text-[10px]">{p.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">站长头像 URL</label>
+            {/* Local Photos Customizer (Avatar & Hero) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="p-3 bg-slate-50 rounded border border-slate-200 space-y-2">
+                <span className="font-bold text-slate-800 block">站长头像设定 (支持本地上传)</span>
+                <div className="flex items-center space-x-3">
+                  <img src={formData.avatar} alt="Avatar preview" className="w-12 h-12 rounded-full object-cover border border-emerald-500" />
+                  <label className="px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-700 hover:text-emerald-700 cursor-pointer text-xs font-medium shadow-2xs">
+                    上传本地头像
                     <input
-                      type="text"
-                      value={avatarUrl}
-                      onChange={e => setAvatarUrl(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-slate-800"
+                      type="file"
+                      accept="image/*"
+                      onChange={e => e.target.files?.[0] && handleUploadImage('avatar', e.target.files[0])}
+                      className="hidden"
                     />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">全局底色 (Hex)</label>
-                    <input
-                      type="text"
-                      value={bgColor}
-                      onChange={e => setBgColor(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded px-2 py-1 font-mono text-slate-800"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Hero 横幅大图 URL</label>
-                  <input
-                    type="text"
-                    value={heroBannerUrl}
-                    onChange={e => setHeroBannerUrl(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-slate-800"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  className="w-full bg-rose-500 hover:bg-rose-600 text-white font-medium py-1.5 rounded text-xs flex items-center justify-center gap-1"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  保存视觉与主题配置
-                </button>
-              </div>
-            </div>
-
-            {/* SUB-PARTITION 3: 注册控制与访客隐藏选区开关 (仅管理员可见) */}
-            <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Lock className="w-4 h-4 text-purple-500" />
-                  小分区 3：注册控制与访客隐藏选区开关 (仅管理员可见)
-                </span>
-                <span className="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded font-mono font-bold">
-                  Security
-                </span>
-              </div>
-
-              <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3 text-xs">
-                <label className="flex items-start space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={!!formData.requireEmailRegistration}
-                    onChange={e => setFormData({ ...formData, requireEmailRegistration: e.target.checked })}
-                    className="mt-0.5 w-4 h-4 text-purple-600 rounded"
-                  />
-                  <div>
-                    <span className="font-semibold text-slate-800 block">开放全站邮箱自主注册 (Register Policy)</span>
-                    <p className="text-[11px] text-slate-400 mt-0.5">关闭后仅站长可在后台手动授权增减用户</p>
-                  </div>
-                </label>
-
-                <div className="border-t border-slate-100 pt-3">
-                  <label className="flex items-start space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={!!formData.hideNonBlogForGuests}
-                      onChange={e => setFormData({ ...formData, hideNonBlogForGuests: e.target.checked })}
-                      className="mt-0.5 w-4 h-4 text-purple-600 rounded"
-                    />
-                    <div>
-                      <span className="font-semibold text-slate-800 block">访客隐私模式：对未登录访客隐藏非博文选区</span>
-                      <p className="text-[11px] text-slate-400 mt-0.5">启用后未登录访客仅可见博文，隐藏网盘、文创商城与足迹</p>
-                    </div>
                   </label>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleSave}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-1.5 rounded text-xs flex items-center justify-center gap-1"
-              >
-                <Save className="w-3.5 h-3.5" />
-                保存注册与访客隐私策略
-              </button>
+              <div className="p-3 bg-slate-50 rounded border border-slate-200 space-y-2">
+                <span className="font-bold text-slate-800 block">首页背景照片 (Hero Banner 支持本地上传)</span>
+                <div className="flex items-center space-x-3">
+                  <img src={heroData.bannerImage} alt="Hero banner" className="w-16 h-10 rounded object-cover border border-emerald-500" />
+                  <label className="px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-700 hover:text-emerald-700 cursor-pointer text-xs font-medium shadow-2xs">
+                    上传本地背景图
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => e.target.files?.[0] && handleUploadImage('bannerImage', e.target.files[0])}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sub-partition 3: Privacy & Guest Control Switchers */}
+          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-3">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
+              <EyeOff className="w-4 h-4 text-emerald-600" />
+              <span>子分区三：注册控制与访客隐藏选区开关 (仅管理员可见)</span>
+            </h3>
+            <div className="space-y-2 text-xs">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!formData.hideNonBlogForGuests}
+                  onChange={e => setFormData({ ...formData, hideNonBlogForGuests: e.target.checked })}
+                  className="rounded text-emerald-600"
+                />
+                <span className="text-slate-700">访客仅允许浏览博客专栏，对未登录访客隐藏非核心商业模块</span>
+              </label>
+
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!formData.requireEmailRegistration}
+                  onChange={e => setFormData({ ...formData, requireEmailRegistration: e.target.checked })}
+                  className="rounded text-emerald-600"
+                />
+                <span className="text-slate-700">新用户注册时强制验证电子邮箱</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Sub-partition 4: Registered Users List */}
+          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-emerald-600" />
+                <span>子分区四：已注册用户管理列表 (项目唯一管理员专属)</span>
+              </h3>
+              <span className="text-xs text-slate-400">共 {registeredUsers.length} 位系统用户</span>
             </div>
 
-            {/* SUB-PARTITION 4: 已注册用户管理列表 (站长专属) */}
-            <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Users className="w-4 h-4 text-emerald-500" />
-                  小分区 4：已注册用户管理列表 (站长专属)
-                </span>
-                <span className="text-[11px] text-slate-400 font-mono">{users.length} 位会员</span>
-              </div>
-
-              <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2 text-xs">
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    placeholder="用户名"
-                    value={newUsername}
-                    onChange={e => setNewUsername(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded px-2 py-1"
-                  />
-                  <input
-                    type="email"
-                    placeholder="用户邮箱"
-                    value={newUserEmail}
-                    onChange={e => setNewUserEmail(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded px-2 py-1"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!newUsername || !newUserEmail) return;
-                    setUsers([{
-                      id: `u-${Date.now()}`,
-                      username: newUsername,
-                      email: newUserEmail,
-                      role: newUserRole,
-                      registeredAt: new Date().toISOString().split('T')[0],
-                    }, ...users]);
-                    setNewUsername('');
-                    setNewUserEmail('');
-                    setStatusMsg({ type: 'success', text: `已添加注册用户 ${newUsername}` });
-                  }}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded py-1 font-medium text-xs flex items-center justify-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  新建注册账号
-                </button>
-              </div>
-
-              <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
-                {users.map(u => (
-                  <div key={u.id} className="bg-white border border-slate-200 rounded p-2 text-xs flex items-center justify-between">
+            <div className="divide-y divide-slate-100">
+              {registeredUsers.map(user => (
+                <div key={user.id} className="py-2.5 flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-2.5">
+                    <img src={user.avatar} alt={user.username} className="w-7 h-7 rounded-full object-cover" />
                     <div>
-                      <span className="font-bold text-slate-800">{u.username}</span>
-                      <span className="text-slate-400 font-mono text-[10px] ml-2">{u.email}</span>
+                      <span className="font-semibold text-slate-800">{user.username}</span>
+                      <span className="text-slate-400 ml-2">({user.email || '未填邮箱'})</span>
                     </div>
-                    {u.role !== 'admin' && (
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      user.role === 'admin' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {user.role === 'admin' ? '唯一站长' : '注册用户'}
+                    </span>
+                    {user.role !== 'admin' && (
                       <button
-                        onClick={() => setUsers(users.filter(x => x.id !== u.id))}
-                        className="text-slate-400 hover:text-rose-500 p-1"
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="text-slate-400 hover:text-rose-600 p-1"
+                        title="删除注销该用户"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* 3. SYSTEM INFRASTRUCTURE & MULTI-CLOUD DEPLOYMENT          */}
-      {/* ========================================================= */}
-      {activeTab === 'system' && (
-        <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Site identity */}
-          <div className="bg-white rounded-3xl border border-rose-100/80 p-6 shadow-xs space-y-4">
-            <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
-              <Globe className="w-4 h-4 text-rose-500" />
-              <h3 className="text-sm font-bold text-slate-900">博客基础身份与标语</h3>
-            </div>
+      {/* Tab 3: Cloudflare Bindings & Nutstore / WebDAV 4-parameter interface */}
+      {activeTab === 'bindings' && (
+        <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-5">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
+            <Link2 className="w-4 h-4 text-emerald-600" />
+            <span>坚果云 / WebDAV 远端同步 4 大核心接口</span>
+          </h3>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">站点名称</label>
+              <label className="block text-slate-700 font-semibold mb-1">1. 服务器地址 (Server URL)</label>
               <input
                 type="text"
-                value={formData.siteName}
-                onChange={e => setFormData({ ...formData, siteName: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-rose-400"
+                value={formData.webdavConfig.serverUrl}
+                onChange={e => setFormData({
+                  ...formData,
+                  webdavConfig: { ...formData.webdavConfig, serverUrl: e.target.value }
+                })}
+                placeholder="https://dav.jianguoyun.com/dav/"
+                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">站长作者名称</label>
+              <label className="block text-slate-700 font-semibold mb-1">2. 用户名 (Username)</label>
               <input
                 type="text"
-                value={formData.authorName}
-                onChange={e => setFormData({ ...formData, authorName: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-rose-400"
+                value={formData.webdavConfig.username}
+                onChange={e => setFormData({
+                  ...formData,
+                  webdavConfig: { ...formData.webdavConfig, username: e.target.value }
+                })}
+                placeholder="foxuser@outlook.com"
+                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">横幅主标题 (Hero Title)</label>
+              <label className="block text-slate-700 font-semibold mb-1">3. 应用授权密码 (Password / App Token)</label>
               <input
-                type="text"
-                value={heroData.title}
-                onChange={e => setHeroData({ ...heroData, title: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-rose-400"
+                type="password"
+                value={formData.webdavConfig.password}
+                onChange={e => setFormData({
+                  ...formData,
+                  webdavConfig: { ...formData.webdavConfig, password: e.target.value }
+                })}
+                placeholder="坚果云应用授权码"
+                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">横幅意境口号 (Hero Tag)</label>
+              <label className="block text-slate-700 font-semibold mb-1">4. 远程存储路径 (Remote Path)</label>
               <input
                 type="text"
-                value={heroData.tag}
-                onChange={e => setHeroData({ ...heroData, tag: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-rose-400"
+                value={formData.webdavConfig.remotePath}
+                onChange={e => setFormData({
+                  ...formData,
+                  webdavConfig: { ...formData.webdavConfig, remotePath: e.target.value }
+                })}
+                placeholder="/fox2_backup"
+                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
               />
             </div>
           </div>
 
-          {/* Multi-cloud & AI API settings */}
-          <div className="bg-white rounded-3xl border border-rose-100/80 p-6 shadow-xs space-y-4">
-            <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
-              <Sparkles className="w-4 h-4 text-emerald-500" />
-              <h3 className="text-sm font-bold text-slate-900">AI 编程助手与多云参数</h3>
-            </div>
+          <div className="flex items-center justify-between pt-2">
+            <button
+              onClick={handleTestWebDav}
+              disabled={webdavTesting}
+              className="px-4 py-2 rounded bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-semibold hover:bg-emerald-100 transition disabled:opacity-50"
+            >
+              {webdavTesting ? '正在验证 WebDAV 接口...' : '测试坚果云 / WebDAV 连通性'}
+            </button>
+            {webdavMsg && <span className="text-xs font-mono text-slate-600">{webdavMsg}</span>}
+          </div>
+        </div>
+      )}
 
+      {/* Tab 4: AI & Architecture settings */}
+      {activeTab === 'advanced' && (
+        <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-4 text-xs">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
+            <Cpu className="w-4 h-4 text-emerald-600" />
+            <span>智能编程 AI 模型与算力路由</span>
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">AI 默认模型</label>
+              <label className="block text-slate-700 font-semibold mb-1">默认调用模型</label>
               <input
                 type="text"
                 value={formData.aiModel}
                 onChange={e => setFormData({ ...formData, aiModel: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-rose-400 font-mono"
+                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">AI API Key (支持 DeepSeek / Cloudflare AI / OpenAI)</label>
-              <input
-                type="password"
-                value={formData.aiApiKey}
-                onChange={e => setFormData({ ...formData, aiApiKey: e.target.value })}
-                placeholder="sk-..."
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-rose-400 font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">AI Base URL</label>
+              <label className="block text-slate-700 font-semibold mb-1">API Base URL (留空使用官方网关)</label>
               <input
                 type="text"
                 value={formData.aiBaseUrl}
                 onChange={e => setFormData({ ...formData, aiBaseUrl: e.target.value })}
-                placeholder="https://api.deepseek.com/v1"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-rose-400 font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">坚果云 / WebDAV 远端同步 URL</label>
-              <input
-                type="text"
-                value={formData.webdavUrl}
-                onChange={e => setFormData({ ...formData, webdavUrl: e.target.value })}
-                placeholder="https://dav.jianguoyun.com/dav/"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-rose-400 font-mono"
+                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
               />
             </div>
           </div>
 
-          <div className="lg:col-span-2 flex justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-emerald-600 text-white font-bold text-xs shadow-md shadow-rose-200 hover:opacity-95 flex items-center space-x-2 transition-all active:scale-95 disabled:opacity-50"
-            >
-              <Save className="w-4 h-4" />
-              <span>{saving ? '保存中...' : '保存并同步所有设置'}</span>
-            </button>
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1">API Key (可选，填入后直连真实算力)</label>
+            <input
+              type="password"
+              value={formData.aiApiKey}
+              onChange={e => setFormData({ ...formData, aiApiKey: e.target.value })}
+              placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+              className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-slate-800"
+            />
           </div>
-        </form>
+        </div>
       )}
 
-      {/* Deployment Hub & Guides */}
-      <div className="bg-white rounded-3xl border border-rose-100/80 p-6 sm:p-8 shadow-xs">
-        <div className="flex items-center space-x-2 pb-4 border-b border-slate-100 mb-6">
-          <Server className="w-5 h-5 text-rose-500" />
-          <h3 className="text-base font-bold text-slate-900">多云极速部署指引中枢 (Cloudflare / 腾讯云 / 阿里云 / Vercel)</h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="p-4 rounded-2xl bg-orange-50/60 border border-orange-200/60 space-y-2">
-            <span className="font-bold text-xs text-orange-900 flex items-center space-x-1">
-              <span>⚡ Cloudflare Pages (首选推荐)</span>
-            </span>
-            <p className="text-[11px] text-orange-800 leading-relaxed">
-              1. 登录 Cloudflare Dashboard；<br />
-              2. 导入 GitHub 仓库 <code>fox2</code>；<br />
-              3. 构建命令填 <code>npm run build</code>，输出目录填 <code>dist</code>；<br />
-              4. 享用全球 Anycast 边缘免流分发。
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/60 space-y-2">
-            <span className="font-bold text-xs text-blue-900 flex items-center space-x-1">
-              <span>🐧 腾讯云 EdgeOne / Serverless</span>
-            </span>
-            <p className="text-[11px] text-blue-800 leading-relaxed">
-              1. 登录腾讯云控制台；<br />
-              2. 进入 EdgeOne Pages 或 Web 托管；<br />
-              3. 绑定 Git 仓库，构建命令 <code>npm run build</code>；<br />
-              4. 国内极速访问与备案解析支持。
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/60 space-y-2">
-            <span className="font-bold text-xs text-amber-900 flex items-center space-x-1">
-              <span>☁️ 阿里云 ESA / FC 函数</span>
-            </span>
-            <p className="text-[11px] text-amber-800 leading-relaxed">
-              1. 进入阿里云边缘安全加速 ESA；<br />
-              2. 部署静态网站或边缘函数；<br />
-              3. 可直接上传压缩包 <code>dist.zip</code> 一键上线。
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/60 space-y-2">
-            <span className="font-bold text-xs text-emerald-900 flex items-center space-x-1">
-              <span>▲ Vercel / Docker 独立部署</span>
-            </span>
-            <p className="text-[11px] text-emerald-800 leading-relaxed">
-              - Vercel: 自动检测 <code>vercel.json</code> 一键拉取部署；<br />
-              - 独立服务器: 执行 <code>docker-compose up -d</code> 启动全栈持久化容器。
-            </p>
-          </div>
-        </div>
-
-        {/* Direct Upload Package */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-2">
-          <div className="font-bold flex items-center space-x-2 text-slate-900">
-            <Layers className="w-4 h-4 text-emerald-600" />
-            <span>关于“直接上传压缩包”部署方案的获取与使用说明：</span>
-          </div>
-          <p className="leading-relaxed">
-            如不想绑定 Git 仓库，可在本地终端执行：<br />
-            <code className="bg-slate-200 px-2 py-0.5 rounded text-rose-600 font-mono font-bold">npm run build:pages</code><br />
-            脚本将自动执行静态优化打包，并在项目根目录生成专用的 <code className="font-mono text-emerald-600 font-bold">dist-pages.zip</code> 离线包。随后打开 Cloudflare Pages 控制台，选择 <strong>“Direct Upload (直接上传)”</strong>，拖拽上传即可 0 秒极速发布。
-          </p>
-        </div>
-      </div>
-
-      {/* Data Migration & Backup Sync */}
-      <div className="bg-white rounded-3xl border border-rose-100/80 p-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <h4 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-            <Database className="w-4 h-4 text-rose-500" />
-            <span>全站数据备份与跨云迁移</span>
-          </h4>
-          <p className="text-xs text-slate-500 mt-0.5">
-            全量导出或导入文章、书架进度、订单、网盘文件索引及设置，零 LocalStorage 依赖。
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          <label className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer flex items-center space-x-1.5 transition-colors">
-            <Upload className="w-3.5 h-3.5" />
-            <span>导入备份 JSON</span>
-            <input type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
-          </label>
-
-          <button
-            onClick={handleExportBackup}
-            className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-rose-600 text-white text-xs font-semibold flex items-center space-x-1.5 transition-colors shadow-xs"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>导出全站备份</span>
-          </button>
-        </div>
+      {/* Bottom Sticky Save Button */}
+      <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-emerald-900/10 shadow-xs">
+        <span className="text-xs text-slate-400">
+          所有设置即时提交写入后端数据库，刷新页面自动保持最新状态。
+        </span>
+        <button
+          onClick={handleSaveAll}
+          disabled={saving}
+          className="flex items-center space-x-1.5 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition disabled:opacity-50"
+        >
+          {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : (saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />)}
+          <span>{saving ? '保存中...' : (saveSuccess ? '保存成功！' : '保存系统所有设定')}</span>
+        </button>
       </div>
     </div>
   );

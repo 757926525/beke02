@@ -1,177 +1,166 @@
-# fox2 · 白狐博客 (WhiteFox Blog)
+# fox · 现代多云博客与云端个人空间
 
-> **灵狐踏雪 · 随心而述 · 云端无界**
-> 一款融合东方古典意蕴与现代多云边缘计算的全功能数字化博客、随身书架、甄选文创商城、网盘与 AI 编程中枢。
+> 微软 Outlook 绿白风格 (Emerald & Clean White) · 多云边缘原生架构 · 零客户端 LocalStorage 依赖 · 单管理员唯一制
 
----
-
-## 🌟 核心特性与架构亮点
-
-1. **零 LocalStorage 强依赖 (Zero LocalStorage)**：
-   - 彻底摒弃前端 `localStorage` 脆弱缓存方案，全站所有动态状态（博客发布、文章点赞/收藏、足迹历史、书架章节阅读进度、文创结缘订单、云盘上传文件索引、系统参数）均通过 RESTful API 持久化保存至服务端 JSON/SQLite 边缘数据库。
-   - 页面任意刷新、换端访问、隐私模式浏览均能 100% 保持状态一致。
-
-2. **多云边缘就近分发**：
-   - 原生适配 **Cloudflare Pages / Workers**、**腾讯云 EdgeOne / Serverless**、**阿里云 ESA** 及 **Vercel**。
-   - 默认配置 SPA 路由智能重定向（包含 `404.html` 与 `_routes.json`），杜绝刷新空白页。
-
-3. **内置智能编程与架构 AI 顾问**：
-   - 深度集成 **DeepSeek-R1 (Qwen-32B)**、**Llama 3.1 70B** 与 **Qwen 2.5 Coder**。
-   - 支持直连 Cloudflare Workers AI，提供代码分析、架构推演与部署故障自愈。
-
-4. **全功能一体化中枢**：
-   - 📖 **博客文章**：分类检索、文章点赞/书签收藏、Markdown 阅读器、实时足迹。
-   - 📚 **随身书架**：多端阅读进度跟踪、分卷研读、翻页记忆。
-   - 🛍️ **甄选文创商城**：好物浏览、结缘下单、全量订单跟踪管理。
-   - 📷 **光影视界**：瀑布流相册、画质无损分发、点赞互动与灯箱浏览。
-   - 🎵 **媒体影音**：Lo-Fi 沉浸式编码视听播放器。
-   - 💻 **编程 AI**：全能云端代码架构顾问。
-   - 💾 **网盘与 WebDAV**：文件直接上传、下载、删除及存储配额统计。
-   - ⚙️ **系统管理设置**：站点元信息更新、AI 模型密钥配置、一键导出/导入全量备份 JSON。
+本项目基于前沿技术栈与微软 Outlook 办公美学设计，参考 `https://beke.pages.dev/` 进行全面现代化重构。
 
 ---
 
-## 🚀 快速开始与本地开发
+## 🌟 核心特性与架构升级
 
-### 1. 环境准备
-确保机器已安装 Node.js (>= 18.0.0) 与 npm。
+1. **微软 Outlook 经典绿白美学 (Emerald & White)**
+   - 采用翡翠绿 (`#059669`) 与温润纯白高对比度配色；
+   - 顶部导航栏支持**一键收拢与展开**，享受沉浸式研读；
+   - 品牌名默认为 `fox`（支持在后台一键自定义）；
+   - 页眉状态徽章升级为**站内消息状态灯**，实时感知通信畅通度；
+   - 页面布局切换按钮已收纳于【系统管理设置】内。
 
+2. **单项目唯一管理员制 (RBAC 权限中枢)**
+   - 全项目**仅限一位唯一管理员（站长）**；
+   - **管理员**拥有系统所有编辑控制权、网盘访问权、相册管理权及系统设置权；
+   - **注册用户**仅能发布自己的博文并删除自己的博文，**无权删除或修改其他用户文件与管理员设置**；
+   - **未登录访客**仅能浏览与下载开放文件，不能发布内容；
+   - 管理员账号与密码在**部署环境变量**中预先设定，杜绝安全隐患。
+
+3. **真实有效的云端存储池 (D1 / R2 / KV / AI)**
+   - **数值真实有效**：未接入 Cloudflare D1 或 R2 时，存储池总容量与已用容量默认显示为零或真实物理大小，绝不伪造虚假容量；
+   - **状态指示灯真实有效**：接入 KV 或云端池后呈绿色微光呼吸灯；未接入时呈离线/本地状态；
+   - **完全离线零网络自洽**：系统自带轻量文件型数据库与 local uploads 目录，即便完全不配置任何外部云服务，全站功能依然 100% 正常运行。
+
+4. **网盘与 WebDAV 调度中枢 (站长专属)**
+   - **网盘区仅管理员可见**；
+   - 支持**小图、中图、大图、详细列表**四种全能检视模式；
+   - 支持单个与批量文件极速上传、下载与批量删除；
+   - 上传与下载均带有**实时流式进度条**；
+   - **坚果云 / WebDAV 远端同步**提供标准的 4 大核心接口：
+     - 服务器地址 (Server URL)
+     - 用户名 (Username)
+     - 应用授权密码 (Password)
+     - 远程路径 (Remote Path)
+     - 支持一键连通性连通探测测试。
+
+5. **博文编辑器与多媒体资产库**
+   - **一键选择插入云相册图片**（弹出相册选择器，一键插入高清 Markdown 格式图片）；
+   - **一键插入视频与音乐**（支持 HTML5 视频流与音频流一键插入）；
+   - **自定义本地封面图片**：支持从本地选择图片直接上传并绑定为博客封面，也可以随时更换 Hero 首页背景。
+
+6. **随身数字书架与移动端优化**
+   - 支持本地上传电子书与离线下载；
+   - 明确标注格式兼容性：支持 **.EPUB, .PDF, .TXT, .MOBI, .AZW3**；不支持受 DRM 数字加密的专有文件；
+   - **手机全屏研读体验**：针对移动端优化，顶部保留刘海安全区，绝不遮挡手机状态栏。
+
+---
+
+## 🔐 环境变量与管理员凭证说明
+
+在部署时，请在平台控制台或 `.env` 中设置以下关键变量：
+
+| 环境变量名 | 说明 | 默认值 (测试用) | 生产推荐 |
+|---|---|---|---|
+| `ADMIN_USER` | **系统唯一管理员用户名** | `admin` | 设置为您的专属站长名 |
+| `ADMIN_PASSWORD` | **系统唯一管理员密码** | `fox2admin888` | **请务必在部署控制台设定强密码** |
+| `CF_KV_NAMESPACE` | Cloudflare KV 命名空间名称 (可选) | 无 (自动离线) | `CF_KV_FOX_PROD` |
+| `CF_D1_DATABASE` | Cloudflare D1 数据库名称 (可选) | 无 (自动离线) | `fox_blog_d1` |
+| `CF_R2_BUCKET` | Cloudflare R2 存储桶名称 (可选) | 无 (自动离线) | `fox-assets` |
+
+> ⚠️ **重要安全说明**：管理员密码是部署时的敏感环境变量，请不要硬编码在公开 Git 仓库中。未设置时系统将启用初始默认密码 `fox2admin888`。
+
+---
+
+## 🚀 多云平台部署指南
+
+### 一、Cloudflare Pages 部署指南 (推荐)
+
+#### 1. 方式 A: GitHub / GitLab 自动化 CI/CD
+1. 将本项目推送至您的 GitHub / GitLab 仓库；
+2. 登录 Cloudflare Dashboard -> **Compute (Workers & Pages)** -> **Create application** -> **Pages** -> **Connect to Git**；
+3. 选择该仓库，配置构建设置：
+   - **Framework preset**: `Vite`
+   - **Build command**: `npm run build`
+   - **Build output directory**: `dist`
+4. 在 **Environment variables** 中添加：
+   - `ADMIN_USER`: 您的站长账号
+   - `ADMIN_PASSWORD`: 您的专属站长密码
+5. 点击 **Save and Deploy** 即可全球上线！
+
+#### 2. 方式 B: 直接上传预构建压缩包 (Direct Upload)
+本项目内置一键打包 Cloudflare Pages 归档命令：
 ```bash
-# 克隆仓库
-git clone https://github.com/your-username/fox2.git
-cd fox2
-
-# 安装依赖
-npm install
-```
-
-### 2. 启动全栈开发环境
-本项目支持同时启动前端 Vite 开发热重载服务器与后端 Express API 服务器：
-
-```bash
-npm run dev
-```
-
-- 前端界面: `http://localhost:5173`
-- 后端 API: `http://localhost:3001`
-
-### 3. 构建与打包
-```bash
-# 同时构建前端与后端产物
-npm run build
-
-# 仅构建前端静态产物 (输出至 dist/)
-npm run build:client
-
-# 生成专供 Cloudflare Pages 直接上传的离线部署压缩包 (dist-pages.zip)
 npm run build:pages
 ```
+构建完成后会在根目录生成 `dist-pages.zip`（内含完整的静态单页路由 `404.html` 与 `_routes.json`）。直接在 Cloudflare Pages 后台拖拽上传即可。
+
+#### 3. 绑定 Cloudflare D1 / R2 / KV / Workers AI
+在 Cloudflare Pages 项目后台 -> **Settings** -> **Functions** -> **Bindings** 中：
+- **D1 Database**: 绑定变量名为 `DB`，关联您的 D1 数据库实例；
+- **R2 Bucket**: 绑定变量名为 `BUCKET`，关联您的 R2 免流量费对象存储桶；
+- **KV Namespace**: 绑定变量名为 `KV`，关联您的边缘键值命名空间；
+- **Workers AI**: 绑定变量名为 `AI`。
 
 ---
 
-## ☁️ 多平台极速部署指引
+### 二、腾讯云 EdgeOne / 轻量应用服务器
 
-### 方案 A：Cloudflare Pages 一键部署（首选推荐）
+#### 1. EdgeOne 边缘托管 (静态 + 边缘函数)
+- 构建前端静态资源：`npm run build`
+- 将 `dist/` 目录下全部文件上传至腾讯云 COS 对象存储；
+- 在 EdgeOne 控制台开启全站边缘加速与 HTTPS 证书。
 
-#### 方式 1：Git 仓库自动拉取部署（自动化 CI/CD）
-1. 将本项目推送至您的 GitHub / GitLab 仓库；
-2. 登录 [Cloudflare 控制台](https://dash.cloudflare.com/)，在左侧导航栏点击 **“Workers 和 Pages”** -> **“创建”** -> **“Pages”**；
-3. 选择 **“连接到 Git”** 并选择 `fox2` 仓库；
-4. 构建配置如下设置：
-   - **框架预设**：`Vite`
-   - **构建命令**：`npm run build:client`
-   - **构建输出目录**：`dist`
-   - **环境变量**（可选）：`NODE_VERSION = 20`
-5. 点击 **“保存并部署”**。Cloudflare 将自动在全球边缘网络节点分发，并在几秒钟内分配专属域名（如 `fox2.pages.dev`）。
-
-#### 方式 2：直接上传离线压缩包（无需绑定 Git）
-1. 在本地项目根目录运行：
-   ```bash
-   npm run build:pages
-   ```
-2. 脚本会在根目录自动打包生成 `dist-pages.zip`；
-3. 在 Cloudflare Pages 控制台中选择 **“上传资产 (Direct Upload)”**；
-4. 将 `dist-pages.zip` 解压后的文件或该压缩包上传，输入项目名称 `fox2`，点击部署即可瞬间完成发布！
+#### 2. 腾讯云轻量服务器 (Node.js + PM2)
+```bash
+git clone <your-repo>
+cd fox2
+npm install
+npm run build
+npm install -g pm2
+ADMIN_USER=admin ADMIN_PASSWORD=your_secure_password pm2 start "npm run start" --name "fox2"
+```
 
 ---
 
-### 方案 B：腾讯云 EdgeOne / 静态网站托管
-1. 登录腾讯云控制台，进入 **EdgeOne** 或 **轻量云应用托管**；
-2. 新建站点并绑定 Git 仓库；
-3. 构建命令填写 `npm run build:client`，发布目录填写 `dist`；
-4. EdgeOne 将为国内用户提供超低延迟的边缘节点加速与免费 SSL 证书。
+### 三、阿里云 ESA 边缘安全加速 / OSS
+
+1. 执行 `npm run build` 生成 `dist` 静态包；
+2. 打开阿里云 OSS 控制台，创建静态网站托管存储桶，上传 `dist/` 全部文件；
+3. 接入阿里云 ESA (Edge Security Acceleration) 或 CDN，配置回源与免费 SSL 证书。
 
 ---
 
-### 方案 C：阿里云 ESA / 对象存储 OSS + CDN
-1. 登录阿里云控制台，进入 **边缘安全加速 ESA** 或 **函数计算 FC**；
-2. 可直接将本地打包好的 `dist/` 目录上传至 OSS 存储桶，并开启“静态网站托管”功能；
-3. 将“默认首页”与“404 错误页”均设置为 `index.html`，以保证 SPA 路由正常跳转。
+### 四、Vercel 部署
+
+本项目根目录已内置 `vercel.json` 规则：
+1. 在 Vercel 控制台导入 GitHub 仓库；
+2. 构建命令为 `npm run build`，输出目录为 `dist`；
+3. 在 Settings -> Environment Variables 中配置 `ADMIN_USER` 与 `ADMIN_PASSWORD`；
+4. 点击 Deploy 即可。
 
 ---
 
-### 方案 D：Vercel 部署
-1. 项目已内置标准 `vercel.json` 路由规则；
-2. 登录 [Vercel 仪表盘](https://vercel.com/)，点击 **“Add New Project”** 并导入该仓库；
-3. 构建命令填 `npm run build:client`，输出目录填 `dist`，点击 **“Deploy”** 即可。
+### 五、Docker / 私有云一键部署
+
+根目录已提供完整的 `Dockerfile` 与 `docker-compose.yml`：
+```bash
+docker compose up -d --build
+```
+启动后访问 `http://localhost:3001` 即可体验。
 
 ---
 
-### 方案 E：独立服务器 Docker / Docker Compose 一键部署
-如果您拥有自己的 VPS 云服务器（如腾讯云 CVM、阿里云 ECS 或海外服务器），推荐使用全栈容器化部署：
+## 🛠️ 本地开发与测试命令
 
 ```bash
-# 启动持久化容器服务
-docker-compose up -d --build
+# 安装依赖
+npm install
+
+# 启动本地开发热更新服务器 (前端 Vite 运行在 3000，后端 API 运行在 3001)
+npm run dev
+
+# 编译打包前端与后端
+npm run build
+
+# 生成 Cloudflare Pages 上传压缩包
+npm run build:pages
+
+# 启动生产级全功能服务
+npm run start
 ```
-
-容器将自动运行 Node.js 全功能后端并挂载 `./data` 数据库与 `./uploads` 上传目录，数据在容器重启或销毁后依然安全保留。配套的 Nginx 反向代理配置可直接参考仓库中的 `nginx.conf`。
-
----
-
-## 🤖 AI 编程与模型配置建议
-
-白狐博客内置了智能 AI 工作台。站长可在 **【系统管理设置】** 中自定义模型参数：
-
-1. **推荐模型选型**：
-   - `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b`：具备强大的数学推理与链式思考能力，适合复杂算法推导与工程架构；
-   - `@cf/qwen/qwen2.5-coder-32b-instruct`：专为代码编写与 Bug 审查调优，生成代码严谨规范；
-   - `@cf/meta/llama-3.1-70b-instruct`：中英文多语言综合能力出众。
-2. **API Key 配置**：
-   - 填入您的 DeepSeek API Key 或 Cloudflare Workers AI Token，即可无缝直连最新官方实时算力。
-   - 留空时系统将自动启用本地内置的高保真智能推演引擎，随时保障演示可用性。
-
----
-
-## 📁 目录结构
-
-```text
-fox2/
-├── data/
-│   └── db.json               # 服务端持久化数据库 (Zero LocalStorage)
-├── dist/                     # 前端静态打包生成目录
-├── dist-server/              # 后端独立打包产物
-├── scripts/
-│   └── package-pages.js      # Cloudflare Pages 离线包打包工具
-├── server/
-│   ├── db.ts                 # 边缘数据库管理引擎
-│   └── index.ts              # RESTful API 后端服务
-├── src/
-│   ├── components/           # UI 视图组件库 (Blog, Bookshelf, Shop, Media, AI, Cloud, Admin)
-│   ├── App.tsx               # 根组件
-│   ├── api.ts                # 前端 REST API 通信层
-│   ├── types.ts              # TypeScript 全局数据模型定义
-│   └── index.css             # Tailwind CSS 样式
-├── uploads/                  # 网盘文件实体存储目录
-├── Dockerfile                # 多阶段 Docker 容器构建文件
-├── docker-compose.yml        # Docker Compose 编排文件
-├── nginx.conf                # 独立服务器 Nginx 生产反向代理配置
-├── vercel.json               # Vercel 路由规则
-├── netlify.toml              # Netlify 路由规则
-└── vite.config.ts            # Vite 构建配置
-```
-
----
-
-## 📜 开源协议
-本项目采用 [MIT 协议](LICENSE) 开源。欢迎 Star 与 Fork！

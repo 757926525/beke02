@@ -1,98 +1,212 @@
-import { Post, Book, Product, Order, CloudFile, HistoryItem, HeroConfig, SystemSettings, StorageStatus } from './types';
+import {
+  Post,
+  Book,
+  Product,
+  Order,
+  CloudFile,
+  HistoryItem,
+  HeroConfig,
+  SystemSettings,
+  StorageStatus,
+  User,
+  GalleryItem,
+  MediaTrack
+} from './types';
 
-const API_BASE = '/api';
+// In-memory auth state (Zero localStorage!)
+let currentAuthRole: 'admin' | 'user' | 'guest' = 'admin'; // Default developer session can be switched
+let currentUserId = 'user-admin';
+let currentUserName = 'fox (站长)';
 
-// Fallback in-memory state if server is momentarily unreachable (e.g., pure static preview)
-const FALLBACK_HERO: HeroConfig = {
-  tag: '灵狐踏雪 · 随心而述 · 云端无界',
-  title: '极简敏捷与多云边缘博客',
-  description: '原生适配多云边缘 Pages（Cloudflare / 腾讯云 / 阿里云），一键拉取与构建，集成 D1 边缘数据库与全功能媒体中枢。',
-  bannerImage: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=1200&q=80',
-  storageUsed: 81.6,
-  storageTotal: 10240,
+export const setAuthSession = (role: 'admin' | 'user' | 'guest', id: string, name: string) => {
+  currentAuthRole = role;
+  currentUserId = id;
+  currentUserName = name;
 };
 
-async function req<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options?.headers || {})
-    },
-    ...options
-  });
-  if (!res.ok) {
-    throw new Error(`HTTP Error: ${res.status}`);
+export const getAuthSession = () => ({
+  role: currentAuthRole,
+  userId: currentUserId,
+  userName: currentUserName,
+});
+
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers(options.headers || {});
+  headers.set('x-user-role', currentAuthRole);
+  headers.set('x-user-id', currentUserId);
+  headers.set('x-user-name', encodeURIComponent(currentUserName));
+
+  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
   }
+
+  const res = await fetch(`/api${endpoint}`, {
+    ...options,
+    headers,
+  });
+
   const json = await res.json();
-  return json.data;
+  if (!json.success && json.message) {
+    throw new Error(json.message);
+  }
+  return json.data !== undefined ? json.data : json;
 }
 
 export const api = {
-  // Storage & KV Status
-  getStorageStatus: () => req<StorageStatus>('/storage/status').catch(() => ({
-    kvConnected: true,
-    dbConnected: true,
-    activeStorage: 'kv' as const,
-    lastSyncTime: new Date().toLocaleTimeString('zh-CN'),
-    kvNamespace: 'FOX_BLOG_KV',
-    syncLatencyMs: 4,
-  })),
-  toggleKv: (enabled: boolean) => req<{ success: boolean; enabled: boolean }>('/storage/toggle-kv', { method: 'POST', body: JSON.stringify({ enabled }) }),
+  // Auth
+  login: (username: string, password: string) =>
+    request<{ success: boolean; user: User }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+
+  register: (username: string, email?: string) =>
+    request<{ success: boolean; user: User }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email }),
+    }),
+
+  getUsers: () => request<User[]>('/users'),
+  deleteUser: (id: string) => request<boolean>(`/users/${id}`, { method: 'DELETE' }),
+
+  // Storage Status
+  getStorageStatus: () => request<StorageStatus>('/storage/status'),
 
   // Hero & Settings
-  getHero: () => req<HeroConfig>('/hero').catch(() => FALLBACK_HERO),
-  updateHero: (data: Partial<HeroConfig>) => req<HeroConfig>('/hero', { method: 'PUT', body: JSON.stringify(data) }),
-  getSettings: () => req<SystemSettings>('/settings'),
-  updateSettings: (data: Partial<SystemSettings>) => req<SystemSettings>('/settings', { method: 'PUT', body: JSON.stringify(data) }),
+  getHero: () => request<HeroConfig>('/hero'),
+  updateHero: (hero: Partial<HeroConfig>) =>
+    request<HeroConfig>('/hero', {
+      method: 'PUT',
+      body: JSON.stringify(hero),
+    }),
+
+  getSettings: () => request<SystemSettings>('/settings'),
+  updateSettings: (settings: Partial<SystemSettings>) =>
+    request<SystemSettings>('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    }),
 
   // Posts
-  getPosts: () => req<Post[]>('/posts'),
-  getPost: (id: string) => req<Post>(`/posts/${id}`),
-  createPost: (post: Partial<Post>) => req<Post>('/posts', { method: 'POST', body: JSON.stringify(post) }),
-  updatePost: (id: string, post: Partial<Post>) => req<Post>(`/posts/${id}`, { method: 'PUT', body: JSON.stringify(post) }),
-  deletePost: (id: string) => req<{ success: boolean }>(`/posts/${id}`, { method: 'DELETE' }),
-  likePost: (id: string) => req<Post>(`/posts/${id}/like`, { method: 'POST' }),
-  bookmarkPost: (id: string) => req<Post>(`/posts/${id}/bookmark`, { method: 'POST' }),
+  getPosts: () => request<Post[]>('/posts'),
+  getPost: (id: string) => request<Post>(`/posts/${id}`),
+  createPost: (post: Partial<Post>) =>
+    request<Post>('/posts', {
+      method: 'POST',
+      body: JSON.stringify(post),
+    }),
+  updatePost: (id: string, post: Partial<Post>) =>
+    request<Post>(`/posts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(post),
+    }),
+  deletePost: (id: string) =>
+    request<boolean>(`/posts/${id}`, { method: 'DELETE' }),
+  likePost: (id: string) =>
+    request<Post>(`/posts/${id}/like`, { method: 'POST' }),
+  bookmarkPost: (id: string) =>
+    request<Post>(`/posts/${id}/bookmark`, { method: 'POST' }),
 
   // Books
-  getBooks: () => req<Book[]>('/books'),
-  updateBookProgress: (id: string, page: number) => req<Book>(`/books/${id}/progress`, { method: 'PUT', body: JSON.stringify({ page }) }),
+  getBooks: () => request<Book[]>('/books'),
+  addBook: (book: Partial<Book>) =>
+    request<Book>('/books', {
+      method: 'POST',
+      body: JSON.stringify(book),
+    }),
+  updateBookProgress: (id: string, page: number) =>
+    request<Book>(`/books/${id}/progress`, {
+      method: 'PUT',
+      body: JSON.stringify({ page }),
+    }),
+  deleteBook: (id: string) =>
+    request<boolean>(`/books/${id}`, { method: 'DELETE' }),
+
+  // Gallery
+  getGallery: () => request<GalleryItem[]>('/gallery'),
+  addGalleryItem: (item: Partial<GalleryItem>) =>
+    request<GalleryItem>('/gallery', {
+      method: 'POST',
+      body: JSON.stringify(item),
+    }),
+  deleteGalleryItem: (id: string) =>
+    request<boolean>(`/gallery/${id}`, { method: 'DELETE' }),
+
+  // Media
+  getMedia: () => request<MediaTrack[]>('/media'),
+  addMediaTrack: (track: Partial<MediaTrack>) =>
+    request<MediaTrack>('/media', {
+      method: 'POST',
+      body: JSON.stringify(track),
+    }),
+  deleteMediaTrack: (id: string) =>
+    request<boolean>(`/media/${id}`, { method: 'DELETE' }),
 
   // Products & Orders
-  getProducts: () => req<Product[]>('/products'),
-  getOrders: () => req<Order[]>('/orders'),
-  createOrder: (order: Partial<Order>) => req<Order>('/orders', { method: 'POST', body: JSON.stringify(order) }),
+  getProducts: () => request<Product[]>('/products'),
+  getOrders: () => request<Order[]>('/orders'),
+  createOrder: (order: any) =>
+    request<Order>('/orders', {
+      method: 'POST',
+      body: JSON.stringify(order),
+    }),
 
-  // Cloud Files
-  getFiles: () => req<CloudFile[]>('/files'),
-  uploadFile: async (file: File): Promise<CloudFile> => {
+  // Files
+  getFiles: () => request<CloudFile[]>('/files'),
+  uploadFile: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch(`${API_BASE}/files/upload`, {
+    return request<CloudFile>('/files/upload', {
       method: 'POST',
       body: formData,
     });
-    if (!res.ok) throw new Error('上传文件失败');
-    const json = await res.json();
-    return json.data;
   },
-  deleteFile: (id: string) => req<{ success: boolean }>(`/files/${id}`, { method: 'DELETE' }),
+  uploadImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return request<{ success: boolean; url: string }>('/upload/image', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+  deleteFile: (id: string) =>
+    request<boolean>(`/files/${id}`, { method: 'DELETE' }),
+  batchDeleteFiles: (ids: string[]) =>
+    request<{ success: boolean; deletedCount: number }>('/files/batch-delete', {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    }),
+
+  // WebDAV
+  testWebDav: (config: any) =>
+    request<{ success: boolean; message: string }>('/webdav/test', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    }),
 
   // History
-  getHistory: () => req<HistoryItem[]>('/history'),
-  addHistory: (item: { title: string; category: string; postId: string }) => req<HistoryItem>('/history', { method: 'POST', body: JSON.stringify(item) }),
-  deleteHistoryItem: (id: string) => req<{ success: boolean }>(`/history/${id}`, { method: 'DELETE' }),
-  clearHistory: () => req<{ success: boolean }>('/history', { method: 'DELETE' }),
-
-  // AI Chat
-  sendAIChat: (messages: { role: string; content: string }[], model?: string) =>
-    fetch(`${API_BASE}/ai/chat`, {
+  getHistory: () => request<HistoryItem[]>('/history'),
+  addHistory: (item: { title: string; category: string; postId: string }) =>
+    request<HistoryItem>('/history', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, model }),
-    }).then(res => res.json()),
+      body: JSON.stringify(item),
+    }),
+  deleteHistoryItem: (id: string) =>
+    request<boolean>(`/history/${id}`, { method: 'DELETE' }),
+  clearHistory: () => request<{ success: boolean }>('/history', { method: 'DELETE' }),
 
-  // Sync
-  exportData: () => req<any>('/sync/export'),
-  importData: (data: any) => req<any>('/sync/import', { method: 'POST', body: JSON.stringify(data) }),
+  // AI
+  chatAi: (body: { message?: string; messages?: any[]; model?: string }) =>
+    request<{ success: boolean; reply: string; model: string }>('/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  // Backup
+  exportData: () => request<any>('/sync/export'),
+  importData: (data: any) =>
+    request<{ success: boolean }>('/sync/import', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };

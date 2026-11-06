@@ -1,3 +1,12 @@
+export interface User {
+  id: string;
+  username: string;
+  role: 'admin' | 'user';
+  email?: string;
+  avatar?: string;
+  createdAt: string;
+}
+
 export interface Post {
   id: string;
   title: string;
@@ -10,6 +19,8 @@ export interface Post {
   likes: number;
   coverImage?: string;
   isBookmarked?: boolean;
+  authorId?: string;
+  authorName?: string;
 }
 
 export interface Book {
@@ -22,6 +33,9 @@ export interface Book {
   currentPage: number;
   progress: number;
   description: string;
+  format?: 'epub' | 'pdf' | 'txt' | 'mobi' | 'azw3' | 'other';
+  fileUrl?: string;
+  fileSize?: number;
   chapters: { title: string; content: string }[];
 }
 
@@ -58,6 +72,8 @@ export interface CloudFile {
   type: string;
   updatedAt: string;
   url: string;
+  uploadedBy?: string;
+  uploaderRole?: 'admin' | 'user';
 }
 
 export interface HistoryItem {
@@ -77,22 +93,43 @@ export interface HeroConfig {
   storageTotal: number;
 }
 
+export interface WebDavConfig {
+  serverUrl: string;
+  username: string;
+  password: string;
+  remotePath: string;
+}
+
+export interface CloudflareBindings {
+  d1Bound: boolean;
+  d1DatabaseName: string;
+  r2Bound: boolean;
+  r2BucketName: string;
+  kvBound: boolean;
+  kvNamespace: string;
+  aiBound: boolean;
+  aiModelName: string;
+}
+
 export interface SystemSettings {
   siteName: string;
   authorName: string;
   subtitle: string;
   avatar: string;
+  headerBrand: string;
   aiModel: string;
   aiApiKey: string;
   aiBaseUrl: string;
   aiSystemPrompt: string;
   themeColor: string;
+  themeLayout: 'default' | 'compact' | 'wide';
   d1Enabled: boolean;
   r2BucketName: string;
   webdavUrl: string;
+  webdavConfig: WebDavConfig;
+  cfBindings: CloudflareBindings;
   requireEmailRegistration?: boolean;
   hideNonBlogForGuests?: boolean;
-  adminPassword?: string;
 }
 
 export interface GalleryItem {
@@ -101,6 +138,7 @@ export interface GalleryItem {
   category: string;
   imageUrl: string;
   likes: number;
+  uploadedAt?: string;
 }
 
 export interface MediaTrack {
@@ -110,6 +148,7 @@ export interface MediaTrack {
   duration: string;
   url: string;
   cover: string;
+  type?: 'audio' | 'video';
 }
 
 export type NavTab =
@@ -126,8 +165,13 @@ export type NavTab =
 export interface StorageStatus {
   kvConnected: boolean;
   dbConnected: boolean;
-  activeStorage: 'kv' | 'db';
+  d1Bound: boolean;
+  r2Bound: boolean;
+  activeStorage: 'kv' | 'db' | 'local';
   lastSyncTime: string;
   kvNamespace: string;
   syncLatencyMs: number;
+  cloudStorageUsedMb: number;
+  cloudStorageTotalMb: number;
+  localStorageUsedMb: number;
 }

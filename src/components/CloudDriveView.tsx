@@ -1,209 +1,451 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { CloudFile } from '../types';
 import {
-  HardDrive,
-  UploadCloud,
-  Download,
+  Upload,
   Trash2,
-  FileText,
-  FileVideo,
-  FileArchive,
+  Download,
   File,
-  CheckCircle,
-  AlertCircle,
-  ExternalLink
+  FileText,
+  Image as ImageIcon,
+  Video,
+  Music,
+  Archive,
+  Search,
+  HardDrive,
+  LayoutGrid,
+  List,
+  Columns,
+  Grid3X3,
+  CheckSquare,
+  Square,
+  HelpCircle
 } from 'lucide-react';
 
 interface CloudDriveViewProps {
   files: CloudFile[];
   storageUsed: number;
   storageTotal: number;
+  isAdmin?: boolean;
   onUploadFile: (file: File) => Promise<void>;
   onDeleteFile: (id: string) => Promise<void>;
+  onBatchDelete?: (ids: string[]) => Promise<void>;
 }
 
 export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
   files,
   storageUsed,
   storageTotal,
+  isAdmin,
   onUploadFile,
   onDeleteFile,
+  onBatchDelete,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [search, setSearch] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'medium' | 'small' | 'large' | 'detail'>('detail');
 
-  const formatSize = (bytes: number) => {
-    if (bytes >= 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
-    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return bytes + ' B';
-  };
+  // Upload & Download Progress Simulation State
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [downloadProgress, setDownloadProgress] = useState<{ id: string; progress: number } | null>(null);
+  const [showMultiCloudGuide, setShowMultiCloudGuide] = useState(false);
 
-  const getFileIcon = (type: string, name: string) => {
-    if (type.includes('video') || name.endsWith('.mp4') || name.endsWith('.webm')) {
-      return <FileVideo className="w-5 h-5 text-indigo-500" />;
-    }
-    if (type.includes('zip') || name.endsWith('.zip') || name.endsWith('.tar.gz')) {
-      return <FileArchive className="w-5 h-5 text-amber-500" />;
-    }
-    if (type.includes('pdf') || name.endsWith('.pdf') || name.endsWith('.md')) {
-      return <FileText className="w-5 h-5 text-rose-500" />;
-    }
-    return <File className="w-5 h-5 text-slate-500" />;
-  };
+  // If not admin, hide drive (restricted)
+  if (!isAdmin) {
+    return (
+      <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300">
+        <HardDrive className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+        <h3 className="text-base font-bold text-slate-700">网盘与 WebDAV 区域仅站长（管理员）可见</h3>
+        <p className="text-xs text-slate-400 mt-1">访客与普通注册用户仅能浏览前台开放资源。</p>
+      </div>
+    );
+  }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (!selected) return;
-    setUploading(true);
-    setStatusMsg(null);
-    try {
-      await onUploadFile(selected);
-      setStatusMsg({ type: 'success', text: `文件【${selected.name}】成功上传并同步至云存储！` });
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: '文件上传失败，请检查网络或后端状态。' });
-    } finally {
-      setUploading(false);
-    }
-  };
+  const handleUploadWithProgress = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (!fileList || fileList.length === 0) return;
 
-  const handleDelete = async (file: CloudFile) => {
-    if (!confirm(`确定要彻底删除文件【${file.name}】吗？`)) return;
-    try {
-      await onDeleteFile(file.id);
-      setStatusMsg({ type: 'success', text: `文件【${file.name}】已成功移除。` });
-    } catch (err) {
-      setStatusMsg({ type: 'error', text: '删除失败，请稍后再试。' });
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      // Simulate progressive visual tracker
+      setUploadProgress(10);
+      const timer = setInterval(() => {
+        setUploadProgress(prev => (prev !== null && prev < 90 ? prev + 20 : prev));
+      }, 100);
+
+      try {
+        await onUploadFile(file);
+        setUploadProgress(100);
+      } catch (err: any) {
+        alert(`上传失败: ${file.name} - ${err.message}`);
+      } finally {
+        clearInterval(timer);
+        setTimeout(() => setUploadProgress(null), 600);
+      }
     }
   };
 
-  const percentage = Math.min(100, Math.round((storageUsed / storageTotal) * 100));
+  const handleDownloadWithProgress = (file: CloudFile) => {
+    setDownloadProgress({ id: file.id, progress: 15 });
+    const timer = setInterval(() => {
+      setDownloadProgress(prev => {
+        if (!prev) return null;
+        if (prev.progress >= 95) {
+          clearInterval(timer);
+          return { id: file.id, progress: 100 };
+        }
+        return { id: file.id, progress: prev.progress + 25 };
+      });
+    }, 120);
+
+    setTimeout(() => {
+      window.location.href = `/api/files/download/${file.id}`;
+      setTimeout(() => setDownloadProgress(null), 800);
+    }, 600);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === filteredFiles.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredFiles.map(f => f.id));
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleBatchDeleteClick = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`确定要批量删除选中的 ${selectedIds.length} 个文件吗？`)) return;
+    if (onBatchDelete) {
+      await onBatchDelete(selectedIds);
+      setSelectedIds([]);
+    }
+  };
+
+  const filteredFiles = files.filter(f =>
+    f.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <ImageIcon className="w-5 h-5 text-emerald-600" />;
+    if (type.startsWith('video/')) return <Video className="w-5 h-5 text-indigo-500" />;
+    if (type.startsWith('audio/')) return <Music className="w-5 h-5 text-rose-500" />;
+    if (type.includes('zip') || type.includes('tar') || type.includes('rar')) return <Archive className="w-5 h-5 text-amber-500" />;
+    return <FileText className="w-5 h-5 text-slate-500" />;
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top Banner Ribbon */}
+      <div className="bg-white p-5 rounded-xl border border-emerald-900/10 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">网盘与 WebDAV · 云端文件管家</h2>
-          <p className="text-xs text-slate-500 mt-0.5">多云原生对象存储 · 支持直接下载、上传与 WebDAV 挂载</p>
+          <div className="flex items-center space-x-2">
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <HardDrive className="w-5 h-5 text-emerald-600" />
+              <span>多云网盘中枢 (站长专属权限)</span>
+            </h2>
+            <button
+              onClick={() => setShowMultiCloudGuide(!showMultiCloudGuide)}
+              className="text-xs text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 underline font-medium"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>多云调度使用指南</span>
+            </button>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            支持单个与批量文件极速上传下载、流式传输、多模式视图切换与 WebDAV 双向同步。
+          </p>
         </div>
 
-        {/* Hidden input */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-        />
+        {/* Upload Button */}
+        <div className="flex items-center space-x-2">
+          {selectedIds.length > 0 && onBatchDelete && (
+            <button
+              onClick={handleBatchDeleteClick}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold hover:bg-rose-100 transition"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>批量删除 ({selectedIds.length})</span>
+            </button>
+          )}
 
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-md shadow-emerald-200 flex items-center space-x-1.5 transition-all active:scale-95 disabled:opacity-50 self-start sm:self-auto"
-        >
-          <UploadCloud className="w-4 h-4" />
-          <span>{uploading ? '上传中...' : '上传新文件至云端'}</span>
-        </button>
+          <label className="flex items-center space-x-1.5 px-4 py-2 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 cursor-pointer shadow-xs transition">
+            <Upload className="w-3.5 h-3.5" />
+            <span>单个/批量上传文件</span>
+            <input
+              type="file"
+              multiple
+              onChange={handleUploadWithProgress}
+              className="hidden"
+            />
+          </label>
+        </div>
       </div>
 
-      {statusMsg && (
-        <div
-          className={`p-4 rounded-2xl border text-xs font-medium flex items-center justify-between animate-fadeIn ${
-            statusMsg.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border-rose-200 text-rose-800'
-          }`}
-        >
-          <div className="flex items-center space-x-2">
-            {statusMsg.type === 'success' ? (
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600" />
-            )}
-            <span>{statusMsg.text}</span>
+      {/* Multi-cloud Dispatcher Guide Drawer */}
+      {showMultiCloudGuide && (
+        <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs text-slate-700 space-y-3">
+          <div className="font-bold text-emerald-900 text-sm">
+            🌐 fox2 多云调度中枢使用详细指南
           </div>
-          <button onClick={() => setStatusMsg(null)} className="text-slate-400 hover:text-slate-600">
-            ×
-          </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="p-3 bg-white rounded-lg border border-emerald-100">
+              <div className="font-bold text-emerald-800">1. 本地存储模式 (零网络依赖)</div>
+              <div className="text-slate-600 text-[11px] mt-1">
+                当未配置 Cloudflare 或公有云凭证时，系统自动使用服务器本地磁盘 uploads 目录保存资产，数据写入本地 JSON 数据库，离线可用。
+              </div>
+            </div>
+            <div className="p-3 bg-white rounded-lg border border-emerald-100">
+              <div className="font-bold text-emerald-800">2. Cloudflare R2 对象存储</div>
+              <div className="text-slate-600 text-[11px] mt-1">
+                在 Cloudflare Pages 后台绑定 R2 存储桶变量名，即可享受全球 CDN 免出站流量费高速下发，数值真实显示。
+              </div>
+            </div>
+            <div className="p-3 bg-white rounded-lg border border-emerald-100">
+              <div className="font-bold text-emerald-800">3. 坚果云 / WebDAV 远端同步</div>
+              <div className="text-slate-600 text-[11px] mt-1">
+                在【系统管理设置】中填入服务器地址、用户名、密码和路径四大接口，一键测试连通并进行双向冷备。
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Storage Indicator */}
-      <div className="bg-white rounded-2xl border border-rose-100/80 p-5 shadow-xs">
-        <div className="flex items-center justify-between text-xs font-bold mb-2">
-          <span className="flex items-center space-x-2 text-slate-800">
-            <HardDrive className="w-4 h-4 text-rose-500" />
-            <span>存储空间使用配额 (R2 / OSS / COS)</span>
-          </span>
-          <span className="text-slate-500 font-mono">
-            {storageUsed} MB / {(storageTotal / 1024).toFixed(1)} GB ({percentage}%)
+      {/* Progress Bars (Upload / Download) */}
+      {uploadProgress !== null && (
+        <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+          <div className="flex items-center justify-between text-xs font-semibold text-emerald-900 mb-1">
+            <span>正在上传文件至多云网盘...</span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <div className="w-full bg-emerald-200 rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-emerald-600 h-2 transition-all duration-200"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {downloadProgress !== null && (
+        <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+          <div className="flex items-center justify-between text-xs font-semibold text-indigo-900 mb-1">
+            <span>正在准备并下载文件副本...</span>
+            <span>{downloadProgress.progress}%</span>
+          </div>
+          <div className="w-full bg-indigo-200 rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-indigo-600 h-2 transition-all duration-200"
+              style={{ width: `${downloadProgress.progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Filter, Search & 4 View Mode Switchers */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-emerald-900/10 shadow-xs">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleSelectAll}
+            className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition"
+          >
+            {selectedIds.length === filteredFiles.length && filteredFiles.length > 0 ? (
+              <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
+            ) : (
+              <Square className="w-3.5 h-3.5 text-slate-400" />
+            )}
+            <span>全选 / 反选</span>
+          </button>
+          <span className="text-xs text-slate-400">
+            共 {filteredFiles.length} 个文件
           </span>
         </div>
-        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-          <div
-            className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${Math.max(percentage, 1)}%` }}
-          />
+
+        <div className="flex items-center space-x-2">
+          <div className="relative flex-1 sm:w-60">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+            <input
+              type="text"
+              placeholder="搜索文件名..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-500 focus:bg-white transition"
+            />
+          </div>
+
+          {/* 4 View Modes */}
+          <div className="flex items-center border border-slate-200 rounded-md p-0.5 bg-slate-50">
+            <button
+              onClick={() => setViewMode('small')}
+              title="小图视图"
+              className={`p-1 rounded ${viewMode === 'small' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <Grid3X3 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('medium')}
+              title="中图视图"
+              className={`p-1 rounded ${viewMode === 'medium' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('large')}
+              title="大图卡片视图"
+              className={`p-1 rounded ${viewMode === 'large' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <Columns className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('detail')}
+              title="详细信息列表"
+              className={`p-1 rounded ${viewMode === 'detail' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Files Table */}
-      <div className="bg-white rounded-2xl border border-rose-100/80 overflow-hidden shadow-xs">
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">文件列表 ({files.length})</h3>
-          <span className="text-[11px] text-slate-400">已开启直接下载与服务端状态记忆</span>
+      {/* Files Display */}
+      {filteredFiles.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-xl border border-dashed border-emerald-300">
+          <HardDrive className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+          <p className="text-xs text-slate-500">网盘暂无文件，点击上方按钮上传</p>
         </div>
-
-        {files.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 text-xs">
-            网盘暂无文件，点击右上角“上传新文件至云端”开始使用
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {files.map(file => (
+      ) : viewMode === 'detail' ? (
+        /* Detailed List View */
+        <div className="bg-white rounded-xl border border-emerald-900/10 overflow-hidden shadow-xs">
+          <table className="w-full text-left text-xs text-slate-600">
+            <thead className="bg-[#f8faf9] text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th className="py-2.5 px-3 w-8"></th>
+                <th className="py-2.5 px-3">文件名</th>
+                <th className="py-2.5 px-3 w-28">大小</th>
+                <th className="py-2.5 px-3 w-36">更新时间</th>
+                <th className="py-2.5 px-3 w-24 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredFiles.map(file => {
+                const isSelected = selectedIds.includes(file.id);
+                return (
+                  <tr key={file.id} className={`hover:bg-emerald-50/50 transition ${isSelected ? 'bg-emerald-50/60' : ''}`}>
+                    <td className="py-2.5 px-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleSelect(file.id)}
+                        className="rounded border-slate-300 text-emerald-600"
+                      />
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center space-x-2">
+                        {getFileIcon(file.type)}
+                        <span className="font-medium text-slate-800 truncate max-w-md">{file.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 font-mono text-slate-500">
+                      {(file.size / (1024 * 1024)).toFixed(2)} MB
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-400">{file.updatedAt}</td>
+                    <td className="py-2.5 px-3 text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => handleDownloadWithProgress(file)}
+                          title="下载文件"
+                          className="p-1 text-slate-400 hover:text-emerald-700"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`确认删除 ${file.name}？`)) onDeleteFile(file.id);
+                          }}
+                          title="删除文件"
+                          className="p-1 text-slate-400 hover:text-rose-600"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        /* Small, Medium, Large Grid Views */
+        <div className={
+          viewMode === 'small'
+            ? 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3'
+            : (viewMode === 'large'
+              ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6'
+              : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4')
+        }>
+          {filteredFiles.map(file => {
+            const isSelected = selectedIds.includes(file.id);
+            return (
               <div
                 key={file.id}
-                className="p-4 sm:px-6 flex items-center justify-between hover:bg-slate-50/80 transition-colors"
+                onClick={() => handleToggleSelect(file.id)}
+                className={`bg-white rounded-lg border p-3 flex flex-col justify-between cursor-pointer transition shadow-2xs hover:shadow-sm ${
+                  isSelected ? 'border-emerald-600 bg-emerald-50/30 ring-1 ring-emerald-500' : 'border-emerald-900/10 hover:border-emerald-400'
+                }`}
               >
-                <div className="flex items-center space-x-3.5 min-w-0 pr-4">
-                  <div className="p-2.5 rounded-xl bg-slate-100 shrink-0">
-                    {getFileIcon(file.type, file.name)}
+                <div className="flex items-center justify-between mb-2">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={e => {
+                      e.stopPropagation();
+                      handleToggleSelect(file.id);
+                    }}
+                    className="rounded text-emerald-600"
+                  />
+                  <span className="text-[10px] text-slate-400">
+                    {(file.size / (1024 * 1024)).toFixed(1)} MB
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center py-2 text-center">
+                  <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-700 mb-1.5">
+                    {getFileIcon(file.type)}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-slate-800 truncate">{file.name}</p>
-                    <div className="flex items-center space-x-3 text-[11px] text-slate-400 font-mono mt-0.5">
-                      <span>{formatSize(file.size)}</span>
-                      <span>•</span>
-                      <span>{file.updatedAt}</span>
-                    </div>
+                  <div className="text-xs font-semibold text-slate-800 truncate w-full" title={file.name}>
+                    {file.name}
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 shrink-0">
-                  <a
-                    href={`/api/files/download/${file.id}`}
-                    download={file.name}
-                    className="p-2 rounded-lg text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center space-x-1 text-xs font-medium"
-                    title="下载文件"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span className="hidden sm:inline">下载</span>
-                  </a>
-
-                  <button
-                    onClick={() => handleDelete(file)}
-                    className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                    title="删除"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-400">
+                  <span className="truncate">{file.updatedAt.split(' ')[0]}</span>
+                  <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => handleDownloadWithProgress(file)}
+                      className="p-1 hover:text-emerald-700"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`确认删除 ${file.name}？`)) onDeleteFile(file.id);
+                      }}
+                      className="p-1 hover:text-rose-600"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
