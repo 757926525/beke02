@@ -24,6 +24,14 @@ export interface DatabaseData {
   gallery: GalleryItem[];
   media: MediaTrack[];
   history: HistoryItem[];
+  aiProjects?: {
+    id: string;
+    name: string;
+    repoUrl?: string;
+    model: string;
+    updatedAt: string;
+    messages: { role: 'user' | 'assistant' | 'system'; content: string }[];
+  }[];
   hero: HeroConfig;
   settings: SystemSettings;
   adminCredentials: {
@@ -577,6 +585,51 @@ class Database {
   clearHistory(): void {
     this.data.history = [];
     this.saveData(this.data);
+  }
+
+  // --- AI Projects ---
+  getAiProjects() {
+    if (!this.data.aiProjects) {
+      this.data.aiProjects = [];
+    }
+    return this.data.aiProjects;
+  }
+
+  saveAiProject(project: { id?: string; name: string; repoUrl?: string; model: string; messages: any[] }) {
+    if (!this.data.aiProjects) {
+      this.data.aiProjects = [];
+    }
+    const id = project.id || `proj-${Date.now()}`;
+    const now = new Date().toLocaleString();
+    const existingIndex = this.data.aiProjects.findIndex(p => p.id === id);
+
+    const projectData = {
+      id,
+      name: project.name || `AI工程-${now.slice(5, 16)}`,
+      repoUrl: project.repoUrl || '',
+      model: project.model,
+      updatedAt: now,
+      messages: project.messages || []
+    };
+
+    if (existingIndex >= 0) {
+      this.data.aiProjects[existingIndex] = projectData;
+    } else {
+      this.data.aiProjects.unshift(projectData);
+    }
+    this.saveData(this.data);
+    return projectData;
+  }
+
+  deleteAiProject(id: string) {
+    if (!this.data.aiProjects) return false;
+    const initialLen = this.data.aiProjects.length;
+    this.data.aiProjects = this.data.aiProjects.filter(p => p.id !== id);
+    if (this.data.aiProjects.length !== initialLen) {
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
   }
 
   // Export / Import

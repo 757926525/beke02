@@ -61,9 +61,12 @@ export const AdminView: React.FC<AdminViewProps> = ({
     localStorageUsedMb: 0,
   });
 
-  // WebDAV test status
+  // WebDAV test status & backup/restore actions
   const [webdavTesting, setWebdavTesting] = useState(false);
+  const [webdavBackingUp, setWebdavBackingUp] = useState(false);
+  const [webdavRestoring, setWebdavRestoring] = useState(false);
   const [webdavMsg, setWebdavMsg] = useState<string | null>(null);
+  const [webdavStatus, setWebdavStatus] = useState<{ hasBackup: boolean; lastBackupTime?: string; postsCount?: number; booksCount?: number } | null>(null);
 
   // Users list
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
@@ -99,7 +102,19 @@ export const AdminView: React.FC<AdminViewProps> = ({
     setHeroData(hero);
     fetchStatus();
     fetchUsers();
+    fetchWebDavStatus();
   }, [settings, hero]);
+
+  const fetchWebDavStatus = async () => {
+    try {
+      const res = await api.getWebDavStatus();
+      if (res && res.success) {
+        setWebdavStatus(res);
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
 
   const fetchStatus = async () => {
     try {
@@ -157,6 +172,40 @@ export const AdminView: React.FC<AdminViewProps> = ({
       setWebdavMsg('❌ 连接测试失败: ' + err.message);
     } finally {
       setWebdavTesting(false);
+    }
+  };
+
+  const handleBackupWebDav = async () => {
+    setWebdavBackingUp(true);
+    setWebdavMsg(null);
+    try {
+      const res = await api.backupWebDav(formData.webdavConfig);
+      setWebdavMsg('✅ ' + res.message);
+      fetchWebDavStatus();
+      alert(`坚果云/WebDAV 备份成功！\n文章数: ${res.postsCount} | 电子书数: ${res.booksCount}`);
+    } catch (err: any) {
+      setWebdavMsg('❌ 备份失败: ' + err.message);
+      alert('备份失败: ' + err.message);
+    } finally {
+      setWebdavBackingUp(false);
+    }
+  };
+
+  const handleRestoreWebDav = async () => {
+    if (!confirm('确定从坚果云 / WebDAV 远端备份恢复所有博客和电子书？恢复将同步更新当前博客列表与书架。')) return;
+    setWebdavRestoring(true);
+    setWebdavMsg(null);
+    try {
+      const res = await api.restoreWebDav();
+      setWebdavMsg('✅ ' + res.message);
+      alert(`坚果云/WebDAV 恢复成功！\n已恢复文章: ${res.restoredPostsCount} | 恢复图书: ${res.restoredBooksCount}`);
+      await onRefreshAll();
+      fetchWebDavStatus();
+    } catch (err: any) {
+      setWebdavMsg('❌ 恢复失败: ' + err.message);
+      alert('恢复失败: ' + err.message);
+    } finally {
+      setWebdavRestoring(false);
     }
   };
 
@@ -617,16 +666,54 @@ export const AdminView: React.FC<AdminViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          {/* WebDAV Remote Status Banner */}
+          {webdavStatus?.hasBackup && (
+            <div className="p-3 bg-sky-50 rounded-lg border border-sky-200 text-xs text-sky-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div>
+                <span className="font-bold">远端备份档案就绪：</span>
+                <span className="text-slate-600 ml-1">上次备份时间 {new Date(webdavStatus.lastBackupTime || '').toLocaleString()}</span>
+              </div>
+              <div className="font-mono text-[11px] bg-white px-2.5 py-1 rounded border border-sky-200">
+                博客文章: <strong>{webdavStatus.postsCount}</strong> 篇 | 电子书: <strong>{webdavStatus.booksCount}</strong> 本
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons for the 4 Core Interfaces */}
+          <div className="flex flex-wrap items-center gap-2.5 pt-2">
             <button
               onClick={handleTestWebDav}
               disabled={webdavTesting}
               className="px-4 py-2 rounded bg-sky-50 text-sky-800 border border-sky-300 text-xs font-semibold hover:bg-sky-100 transition disabled:opacity-50"
             >
-              {webdavTesting ? '正在验证 WebDAV 接口...' : '测试坚果云 / WebDAV 连通性'}
+              {webdavTesting ? '正在验证 WebDAV 接口...' : '1. 测试 WebDAV 连通性'}
             </button>
-            {webdavMsg && <span className="text-xs font-mono text-slate-600">{webdavMsg}</span>}
+
+            <button
+              onClick={handleBackupWebDav}
+              disabled={webdavBackingUp}
+              className="px-4 py-2 rounded bg-sky-600 text-white text-xs font-semibold hover:bg-sky-700 shadow-xs transition disabled:opacity-50"
+            >
+              {webdavBackingUp ? '正在备份所有书架与博客...' : '2. 备份所有电子书与博客'}
+            </button>
+
+            <button
+              onClick={handleRestoreWebDav}
+              disabled={webdavRestoring}
+              className="px-4 py-2 rounded bg-white text-slate-700 border border-slate-300 text-xs font-semibold hover:bg-slate-50 transition disabled:opacity-50"
+            >
+              {webdavRestoring ? '正在恢复所有电子书与博客...' : '3. 从远端恢复所有电子书与博客'}
+            </button>
+
+            <button
+              onClick={fetchWebDavStatus}
+              className="px-3 py-2 rounded bg-slate-100 text-slate-600 text-xs hover:bg-slate-200 transition"
+              title="查询备份状态"
+            >
+              4. 检查备份状态
+            </button>
           </div>
+          {webdavMsg && <div className="text-xs font-mono text-slate-700 p-2 rounded bg-slate-50 border border-slate-200">{webdavMsg}</div>}
         </div>
       )}
 

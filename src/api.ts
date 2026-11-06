@@ -76,16 +76,42 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers.set('Content-Type', 'application/json');
   }
 
-  const res = await fetch(`/api${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let res: globalThis.Response;
+  try {
+    res = await fetch(`/api${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (netErr: any) {
+    throw new Error(`网络连接失败，请检查服务是否启动: ${netErr.message || 'Network error'}`);
+  }
 
-  const json = await res.json();
-  if (!json.success && json.message) {
+  // Handle non-JSON or empty response gracefully to prevent:
+  // "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
+  const text = await res.text();
+  let json: any = null;
+
+  if (text && text.trim().length > 0) {
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      if (!res.ok) {
+        throw new Error(`服务端异常 (HTTP ${res.status}): ${text.slice(0, 150)}`);
+      }
+      throw new Error(`服务端返回非有效 JSON 数据: ${text.slice(0, 100)}`);
+    }
+  } else {
+    // If response body is empty
+    if (!res.ok) {
+      throw new Error(`服务端响应失败 (HTTP ${res.status})`);
+    }
+    return { success: true } as any;
+  }
+
+  if (json && json.success === false && json.message) {
     throw new Error(json.message);
   }
-  return json.data !== undefined ? json.data : json;
+  return json && json.data !== undefined ? json.data : json;
 }
 
 export const api = {
@@ -213,12 +239,23 @@ export const api = {
       body: JSON.stringify({ ids }),
     }),
 
-  // WebDAV
+  // WebDAV (4 Core Remote Synchronization Interfaces)
   testWebDav: (config: any) =>
     request<{ success: boolean; message: string }>('/webdav/test', {
       method: 'POST',
       body: JSON.stringify(config),
     }),
+  backupWebDav: (config?: any) =>
+    request<{ success: boolean; message: string; timestamp: string; postsCount: number; booksCount: number }>('/webdav/backup', {
+      method: 'POST',
+      body: JSON.stringify(config || {}),
+    }),
+  restoreWebDav: () =>
+    request<{ success: boolean; message: string; restoredPostsCount: number; restoredBooksCount: number; backupTimestamp: string }>('/webdav/restore', {
+      method: 'POST',
+    }),
+  getWebDavStatus: () =>
+    request<{ success: boolean; hasBackup: boolean; lastBackupTime?: string; postsCount?: number; booksCount?: number; message?: string }>('/webdav/status'),
 
   // History
   getHistory: () => request<HistoryItem[]>('/history'),
@@ -232,10 +269,24 @@ export const api = {
   clearHistory: () => request<{ success: boolean }>('/history', { method: 'DELETE' }),
 
   // AI
-  chatAi: (body: { message?: string; messages?: any[]; model?: string }) =>
+  chatAi: (body: { message?: string; messages?: any[]; model?: string; customBaseUrl?: string; customApiKey?: string; repoContext?: any }) =>
     request<{ success: boolean; reply: string; model: string }>('/ai/chat', {
       method: 'POST',
       body: JSON.stringify(body),
+    }),
+  getAiProjects: () =>
+    request<any[]>('/ai/projects'),
+  saveAiProject: (project: any) =>
+    request<any>('/ai/projects', {
+      method: 'POST',
+      body: JSON.stringify(project),
+    }),
+  deleteAiProject: (id: string) =>
+    request<boolean>(`/ai/projects/${id}`, { method: 'DELETE' }),
+  inspectGitHubRepo: (data: { repoUrl: string; branch?: string; githubToken?: string }) =>
+    request<any>('/ai/github/inspect', {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 
   // Backup
