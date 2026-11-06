@@ -25,29 +25,34 @@ import {
   NavTab,
   User
 } from './types';
-import { api, setAuthSession, getAuthSession } from './api';
+import { api, setAuthSession, clearAuthSession, getAuthSession } from './api';
+import { BookOpen, Bookmark, ShoppingBag, HardDrive, Clock, Settings, PenSquare } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('blog');
   const [loading, setLoading] = useState<boolean>(true);
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState<boolean>(false);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+  const [layoutMode, setLayoutMode] = useState<'desktop' | 'mobile'>('desktop');
 
   // Current session user (Admin by default on start or guest/registered)
-  const [currentUser, setCurrentUser] = useState<User | null>({
-    id: 'user-admin',
-    username: 'admin',
-    role: 'admin',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    createdAt: '2025-01-01',
-  });
+  const initialAuth = getAuthSession();
+  const [currentUser, setCurrentUser] = useState<User | null>(
+    initialAuth.role !== 'guest' ? {
+      id: initialAuth.userId,
+      username: initialAuth.userName,
+      role: initialAuth.role as 'admin' | 'user',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+      createdAt: '2025-01-01',
+    } : null
+  );
 
   // Core dynamic states (Zero localStorage, fully server-synced)
   const [hero, setHero] = useState<HeroConfig>({
-    tag: '灵狐踏雪 · 随心而述 · 碧玉长空',
+    tag: '灵狐逸仙 · 随心而述 · 碧水蓝天',
     title: '现代敏捷多云博客与云端个人空间',
-    description: '原生适配多云边缘生态（Cloudflare D1 / R2 / KV / Workers AI 与 阿里云 / 腾讯云），优雅绿白视界，轻量高效。',
-    bannerImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
+    description: '原生适配多云边缘生态（Cloudflare D1 / R2 / KV / Workers AI 与 阿里云 / 腾讯云），优雅蓝白视界，轻量高效。',
+    bannerImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
     storageUsed: 0,
     storageTotal: 0,
   });
@@ -55,14 +60,14 @@ export const App: React.FC = () => {
   const [settings, setSettings] = useState<SystemSettings>({
     siteName: 'fox · 现代多云数字空间',
     authorName: 'fox (站长)',
-    subtitle: '微软 Outlook 灵感优雅绿白美学 · 云边协同',
+    subtitle: '现代蓝白纯净美学 · 手机/电脑自适应 · 云边协同',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
     headerBrand: 'fox',
     aiModel: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
     aiApiKey: '',
     aiBaseUrl: 'https://api.deepseek.com/v1',
     aiSystemPrompt: '你是由 fox 博客驱动的高级智能架构师与代码工匠。请提供符合微软工程标准与清晰逻辑的解答。',
-    themeColor: '#059669',
+    themeColor: '#0284c7',
     themeLayout: 'default',
     d1Enabled: false,
     r2BucketName: '',
@@ -132,7 +137,7 @@ export const App: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    setAuthSession('guest', 'guest', '访客');
+    clearAuthSession();
     setCurrentUser(null);
     if (activeTab === 'admin' || activeTab === 'cloud') {
       setActiveTab('blog');
@@ -141,6 +146,7 @@ export const App: React.FC = () => {
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
+    setAuthSession(user.role, user.id, user.username);
     loadInitialData();
   };
 
@@ -259,8 +265,10 @@ export const App: React.FC = () => {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-[#f4f7f6] text-slate-800 flex flex-col font-sans selection:bg-emerald-600 selection:text-white">
-      {/* Navigation Ribbon (Outlook Style) */}
+    <div className={`min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col font-sans selection:bg-sky-600 selection:text-white ${
+      layoutMode === 'mobile' ? 'max-w-md mx-auto shadow-2xl border-x border-slate-200' : ''
+    }`}>
+      {/* Navigation Ribbon with Blue Theme & Desktop/Mobile Switcher */}
       <Navbar
         activeTab={activeTab}
         onTabChange={tab => setActiveTab(tab)}
@@ -271,11 +279,15 @@ export const App: React.FC = () => {
         onLogout={handleLogout}
         isCollapsed={isHeaderCollapsed}
         onToggleCollapse={() => setIsHeaderCollapsed(!isHeaderCollapsed)}
+        layoutMode={layoutMode}
+        onToggleLayoutMode={() => setLayoutMode(layoutMode === 'desktop' ? 'mobile' : 'desktop')}
       />
 
       {/* Main Content Area */}
-      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 ${
-        settings.themeLayout === 'wide' ? 'max-w-[1600px]' : (settings.themeLayout === 'compact' ? 'max-w-5xl' : 'max-w-7xl')
+      <main className={`flex-1 w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 ${
+        layoutMode === 'mobile'
+          ? 'max-w-md pb-24'
+          : (settings.themeLayout === 'wide' ? 'max-w-[1600px]' : (settings.themeLayout === 'compact' ? 'max-w-5xl' : 'max-w-7xl'))
       }`}>
         {/* Hero banner shown on main exploration tabs */}
         {(activeTab === 'blog' || activeTab === 'books' || activeTab === 'shop') && (
@@ -377,16 +389,71 @@ export const App: React.FC = () => {
         onLoginSuccess={handleLoginSuccess}
       />
 
+      {/* Mobile Floating Bottom Navigation Bar (Active in mobile layout or small viewports) */}
+      <div className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-sky-100 py-2 px-3 flex items-center justify-around shadow-lg ${
+        layoutMode === 'mobile' ? 'max-w-md mx-auto' : 'md:hidden'
+      }`}>
+        <button
+          onClick={() => setActiveTab('blog')}
+          className={`flex flex-col items-center text-[10px] ${activeTab === 'blog' ? 'text-sky-600 font-bold' : 'text-slate-500'}`}
+        >
+          <BookOpen className="w-4 h-4 mb-0.5" />
+          <span>博客</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('books')}
+          className={`flex flex-col items-center text-[10px] ${activeTab === 'books' ? 'text-sky-600 font-bold' : 'text-slate-500'}`}
+        >
+          <Bookmark className="w-4 h-4 mb-0.5" />
+          <span>书架</span>
+        </button>
+        {currentUser && (
+          <button
+            onClick={() => setWriteModalOpen(true)}
+            className="flex flex-col items-center text-[10px] text-white -mt-4"
+          >
+            <div className="w-10 h-10 rounded-full bg-sky-600 flex items-center justify-center shadow-md active:scale-95 transition">
+              <PenSquare className="w-5 h-5" />
+            </div>
+            <span className="text-sky-700 font-semibold mt-0.5">发文</span>
+          </button>
+        )}
+        <button
+          onClick={() => setActiveTab('shop')}
+          className={`flex flex-col items-center text-[10px] ${activeTab === 'shop' ? 'text-sky-600 font-bold' : 'text-slate-500'}`}
+        >
+          <ShoppingBag className="w-4 h-4 mb-0.5" />
+          <span>文创</span>
+        </button>
+        {isAdmin ? (
+          <button
+            onClick={() => setActiveTab('admin')}
+            className={`flex flex-col items-center text-[10px] ${activeTab === 'admin' ? 'text-sky-600 font-bold' : 'text-slate-500'}`}
+          >
+            <Settings className="w-4 h-4 mb-0.5" />
+            <span>管理</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex flex-col items-center text-[10px] ${activeTab === 'history' ? 'text-sky-600 font-bold' : 'text-slate-500'}`}
+          >
+            <Clock className="w-4 h-4 mb-0.5" />
+            <span>足迹</span>
+          </button>
+        )}
+      </div>
+
       {/* Footer */}
-      <footer className="mt-auto border-t border-emerald-900/10 bg-white/80 py-6 text-xs text-slate-500">
+      <footer className="mt-auto border-t border-sky-900/10 bg-white/80 py-6 text-xs text-slate-500 mb-12 sm:mb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
             <span className="font-bold text-slate-800">{settings.headerBrand || 'fox'} · 现代多云博客</span>
             <span>© 2025 青丘夜雪 · 保留所有权利</span>
           </div>
           <div className="flex items-center space-x-3">
-            <span>微软 Outlook 绿白风格 (Emerald & White)</span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+            <span>现代优雅蓝白风格 (Sky Azure & Crisp White)</span>
+            <span className="px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 font-semibold border border-sky-200">
               Zero LocalStorage
             </span>
           </div>

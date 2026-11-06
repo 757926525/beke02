@@ -78,10 +78,10 @@ export const MediaView: React.FC<MediaViewProps> = ({ isAdmin }) => {
   return (
     <div className="space-y-6">
       {/* Ribbon */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-emerald-900/10 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-sky-900/10 shadow-xs">
         <div>
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Film className="w-5 h-5 text-emerald-600" />
+            <Film className="w-5 h-5 text-sky-600" />
             <span>媒体影音 · 视听鉴赏中心</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -91,7 +91,7 @@ export const MediaView: React.FC<MediaViewProps> = ({ isAdmin }) => {
 
         <div className="flex items-center space-x-2">
           {isAdmin && (
-            <label className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 cursor-pointer shadow-xs transition">
+            <label className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-sky-600 text-white text-xs font-medium hover:bg-sky-700 cursor-pointer shadow-xs transition">
               <Upload className="w-3.5 h-3.5" />
               <span>{uploading ? '上传中...' : '上传音视频文件'}</span>
               <input
@@ -108,25 +108,25 @@ export const MediaView: React.FC<MediaViewProps> = ({ isAdmin }) => {
           <div className="flex items-center border border-slate-200 rounded-md p-0.5 bg-slate-50">
             <button
               onClick={() => setViewMode('small')}
-              className={`p-1 rounded ${viewMode === 'small' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400'}`}
+              className={`p-1 rounded ${viewMode === 'small' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400'}`}
             >
               <Grid3X3 className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('medium')}
-              className={`p-1 rounded ${viewMode === 'medium' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400'}`}
+              className={`p-1 rounded ${viewMode === 'medium' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400'}`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('large')}
-              className={`p-1 rounded ${viewMode === 'large' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400'}`}
+              className={`p-1 rounded ${viewMode === 'large' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400'}`}
             >
               <Columns className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('detail')}
-              className={`p-1 rounded ${viewMode === 'detail' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400'}`}
+              className={`p-1 rounded ${viewMode === 'detail' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400'}`}
             >
               <List className="w-3.5 h-3.5" />
             </button>
@@ -136,12 +136,12 @@ export const MediaView: React.FC<MediaViewProps> = ({ isAdmin }) => {
 
       {/* Active Player (Sticky / Top) */}
       {currentPlaying && (
-        <div className="p-4 bg-emerald-950 text-white rounded-xl shadow-md border border-emerald-800 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="p-4 bg-sky-950 text-white rounded-xl shadow-md border border-sky-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-3 w-full md:w-auto">
-            <img src={currentPlaying.cover} alt={currentPlaying.title} className="w-12 h-12 rounded object-cover border border-emerald-700" />
+            <img src={currentPlaying.cover} alt={currentPlaying.title} className="w-12 h-12 rounded object-cover border border-sky-700" />
             <div className="truncate">
               <div className="font-bold text-sm truncate">{currentPlaying.title}</div>
-              <div className="text-xs text-emerald-300">{currentPlaying.artist}</div>
+              <div className="text-xs text-sky-300">{currentPlaying.artist}</div>
             </div>
           </div>
 
@@ -169,10 +169,10 @@ export const MediaView: React.FC<MediaViewProps> = ({ isAdmin }) => {
               <div
                 key={track.id}
                 onClick={() => setCurrentPlaying(track)}
-                className="p-3 bg-white rounded-lg border border-emerald-900/10 hover:border-emerald-500 shadow-2xs cursor-pointer flex items-center justify-between transition"
+                className="p-3 bg-white rounded-lg border border-sky-900/10 hover:border-sky-500 shadow-2xs cursor-pointer flex items-center justify-between transition"
               >
                 <div className="flex items-center space-x-3">
-                  {track.type === 'video' ? <Video className="w-4 h-4 text-emerald-600" /> : <Music className="w-4 h-4 text-emerald-600" />}
+                  {track.type === 'video' ? <Video className="w-4 h-4 text-sky-600" /> : <Music className="w-4 h-4 text-sky-600" />}
                   <span className="font-bold text-xs text-slate-800">{track.title}</span>
                   <span className="text-xs text-slate-400">· {track.artist}</span>
                 </div>
@@ -195,7 +195,7 @@ export const MediaView: React.FC<MediaViewProps> = ({ isAdmin }) => {
             <div
               key={track.id}
               onClick={() => setCurrentPlaying(track)}
-              className="bg-white rounded-lg border border-emerald-900/10 overflow-hidden shadow-2xs hover:shadow-md cursor-pointer transition flex flex-col group"
+              className="bg-white rounded-lg border border-sky-900/10 overflow-hidden shadow-2xs hover:shadow-md cursor-pointer transition flex flex-col group"
             >
               <div className="relative h-36 overflow-hidden">
                 <img src={track.cover} alt={track.title} className="w-full h-full object-cover group-hover:scale-105 transition" />

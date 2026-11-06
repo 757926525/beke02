@@ -23,6 +23,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleQuickLoginAdmin = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await api.login('admin', 'fox2admin888');
+      setAuthSession(res.user.role, res.user.id, res.user.username);
+      onLoginSuccess(res.user);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || '管理员快捷登录失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -49,7 +64,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-      <div className="bg-white rounded-xl shadow-xl border border-emerald-900/10 max-w-md w-full p-6 relative">
+      <div className="bg-white rounded-xl shadow-xl border border-sky-900/10 max-w-md w-full p-6 relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition"
@@ -58,7 +73,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </button>
 
         <div className="flex items-center space-x-2 mb-4">
-          <div className="w-8 h-8 rounded bg-emerald-600 text-white flex items-center justify-center font-bold">
+          <div className="w-8 h-8 rounded bg-sky-600 text-white flex items-center justify-center font-bold">
             🦊
           </div>
           <div>
@@ -69,6 +84,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               唯一管理员具备全站系统控制权；注册用户支持发帖与自删。
             </p>
           </div>
+        </div>
+
+        {/* Quick Admin One-Click Login Button */}
+        <div className="mb-4 p-2.5 bg-sky-50 border border-sky-200 rounded-lg flex items-center justify-between">
+          <div className="text-xs text-sky-900">
+            <span className="font-bold block">站长一键免密/快捷登录</span>
+            <span className="text-[11px] text-sky-700">账号 admin · 密码 fox2admin888</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleQuickLoginAdmin}
+            disabled={loading}
+            className="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold rounded shadow-xs transition"
+          >
+            一键登录站长
+          </button>
         </div>
 
         {error && (
@@ -91,7 +122,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 placeholder="例如: admin 或 您的昵称"
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none"
               />
             </div>
           </div>
@@ -108,7 +139,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none"
                 />
               </div>
             </div>
@@ -126,7 +157,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder={mode === 'login' ? '站长初始密码: fox2admin888' : '设置个人密码'}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none"
               />
             </div>
           </div>
@@ -134,7 +165,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-md text-sm shadow-xs transition disabled:opacity-50"
+            className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-md text-sm shadow-xs transition disabled:opacity-50"
           >
             {loading ? '处理中...' : (mode === 'login' ? '登 录' : '立即注册')}
           </button>
@@ -147,7 +178,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               setError(null);
               setMode(mode === 'login' ? 'register' : 'login');
             }}
-            className="font-semibold text-emerald-600 hover:text-emerald-700 underline"
+            className="font-semibold text-sky-600 hover:text-sky-700 underline"
           >
             {mode === 'login' ? '注册新用户' : '返回登录'}
           </button>

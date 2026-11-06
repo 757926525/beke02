@@ -131,7 +131,7 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
   );
 
   const getFileIcon = (type: string) => {
-    if (type.startsWith('image/')) return <ImageIcon className="w-5 h-5 text-emerald-600" />;
+    if (type.startsWith('image/')) return <ImageIcon className="w-5 h-5 text-sky-600" />;
     if (type.startsWith('video/')) return <Video className="w-5 h-5 text-indigo-500" />;
     if (type.startsWith('audio/')) return <Music className="w-5 h-5 text-rose-500" />;
     if (type.includes('zip') || type.includes('tar') || type.includes('rar')) return <Archive className="w-5 h-5 text-amber-500" />;
@@ -141,16 +141,16 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner Ribbon */}
-      <div className="bg-white p-5 rounded-xl border border-emerald-900/10 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white p-5 rounded-xl border border-sky-900/10 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <HardDrive className="w-5 h-5 text-emerald-600" />
+              <HardDrive className="w-5 h-5 text-sky-600" />
               <span>多云网盘中枢 (站长专属权限)</span>
             </h2>
             <button
               onClick={() => setShowMultiCloudGuide(!showMultiCloudGuide)}
-              className="text-xs text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 underline font-medium"
+              className="text-xs text-sky-700 hover:text-sky-800 flex items-center gap-0.5 underline font-medium"
             >
               <HelpCircle className="w-3.5 h-3.5" />
               <span>多云调度使用指南</span>
@@ -173,7 +173,7 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
             </button>
           )}
 
-          <label className="flex items-center space-x-1.5 px-4 py-2 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 cursor-pointer shadow-xs transition">
+          <label className="flex items-center space-x-1.5 px-4 py-2 rounded-md bg-sky-600 text-white text-xs font-medium hover:bg-sky-700 cursor-pointer shadow-xs transition">
             <Upload className="w-3.5 h-3.5" />
             <span>单个/批量上传文件</span>
             <input
@@ -188,25 +188,25 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
 
       {/* Multi-cloud Dispatcher Guide Drawer */}
       {showMultiCloudGuide && (
-        <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs text-slate-700 space-y-3">
-          <div className="font-bold text-emerald-900 text-sm">
+        <div className="p-4 rounded-xl bg-sky-50/70 border border-sky-200 text-xs text-slate-700 space-y-3">
+          <div className="font-bold text-sky-900 text-sm">
             🌐 fox2 多云调度中枢使用详细指南
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="p-3 bg-white rounded-lg border border-emerald-100">
-              <div className="font-bold text-emerald-800">1. 本地存储模式 (零网络依赖)</div>
+            <div className="p-3 bg-white rounded-lg border border-sky-100">
+              <div className="font-bold text-sky-800">1. 本地存储模式 (零网络依赖)</div>
               <div className="text-slate-600 text-[11px] mt-1">
                 当未配置 Cloudflare 或公有云凭证时，系统自动使用服务器本地磁盘 uploads 目录保存资产，数据写入本地 JSON 数据库，离线可用。
               </div>
             </div>
-            <div className="p-3 bg-white rounded-lg border border-emerald-100">
-              <div className="font-bold text-emerald-800">2. Cloudflare R2 对象存储</div>
+            <div className="p-3 bg-white rounded-lg border border-sky-100">
+              <div className="font-bold text-sky-800">2. Cloudflare R2 对象存储</div>
               <div className="text-slate-600 text-[11px] mt-1">
                 在 Cloudflare Pages 后台绑定 R2 存储桶变量名，即可享受全球 CDN 免出站流量费高速下发，数值真实显示。
               </div>
             </div>
-            <div className="p-3 bg-white rounded-lg border border-emerald-100">
-              <div className="font-bold text-emerald-800">3. 坚果云 / WebDAV 远端同步</div>
+            <div className="p-3 bg-white rounded-lg border border-sky-100">
+              <div className="font-bold text-sky-800">3. 坚果云 / WebDAV 远端同步</div>
               <div className="text-slate-600 text-[11px] mt-1">
                 在【系统管理设置】中填入服务器地址、用户名、密码和路径四大接口，一键测试连通并进行双向冷备。
               </div>
@@ -217,14 +217,14 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
 
       {/* Progress Bars (Upload / Download) */}
       {uploadProgress !== null && (
-        <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-          <div className="flex items-center justify-between text-xs font-semibold text-emerald-900 mb-1">
+        <div className="p-3 bg-sky-50 rounded-lg border border-sky-200">
+          <div className="flex items-center justify-between text-xs font-semibold text-sky-900 mb-1">
             <span>正在上传文件至多云网盘...</span>
             <span>{uploadProgress}%</span>
           </div>
-          <div className="w-full bg-emerald-200 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-sky-200 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-emerald-600 h-2 transition-all duration-200"
+              className="bg-sky-600 h-2 transition-all duration-200"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
@@ -247,14 +247,14 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
       )}
 
       {/* Filter, Search & 4 View Mode Switchers */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-emerald-900/10 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-sky-900/10 shadow-xs">
         <div className="flex items-center space-x-2">
           <button
             onClick={handleSelectAll}
             className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition"
           >
             {selectedIds.length === filteredFiles.length && filteredFiles.length > 0 ? (
-              <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
+              <CheckSquare className="w-3.5 h-3.5 text-sky-600" />
             ) : (
               <Square className="w-3.5 h-3.5 text-slate-400" />
             )}
@@ -273,7 +273,7 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
               placeholder="搜索文件名..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-500 focus:bg-white transition"
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-sky-500 focus:bg-white transition"
             />
           </div>
 
@@ -282,28 +282,28 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
             <button
               onClick={() => setViewMode('small')}
               title="小图视图"
-              className={`p-1 rounded ${viewMode === 'small' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`p-1 rounded ${viewMode === 'small' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
             >
               <Grid3X3 className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('medium')}
               title="中图视图"
-              className={`p-1 rounded ${viewMode === 'medium' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`p-1 rounded ${viewMode === 'medium' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('large')}
               title="大图卡片视图"
-              className={`p-1 rounded ${viewMode === 'large' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`p-1 rounded ${viewMode === 'large' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
             >
               <Columns className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('detail')}
               title="详细信息列表"
-              className={`p-1 rounded ${viewMode === 'detail' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`p-1 rounded ${viewMode === 'detail' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
             >
               <List className="w-3.5 h-3.5" />
             </button>
@@ -313,13 +313,13 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
 
       {/* Files Display */}
       {filteredFiles.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-dashed border-emerald-300">
-          <HardDrive className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+        <div className="text-center py-16 bg-white rounded-xl border border-dashed border-sky-300">
+          <HardDrive className="w-8 h-8 text-sky-400 mx-auto mb-2" />
           <p className="text-xs text-slate-500">网盘暂无文件，点击上方按钮上传</p>
         </div>
       ) : viewMode === 'detail' ? (
         /* Detailed List View */
-        <div className="bg-white rounded-xl border border-emerald-900/10 overflow-hidden shadow-xs">
+        <div className="bg-white rounded-xl border border-sky-900/10 overflow-hidden shadow-xs">
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="bg-[#f8faf9] text-slate-700 font-bold border-b border-slate-200">
               <tr>
@@ -334,13 +334,13 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
               {filteredFiles.map(file => {
                 const isSelected = selectedIds.includes(file.id);
                 return (
-                  <tr key={file.id} className={`hover:bg-emerald-50/50 transition ${isSelected ? 'bg-emerald-50/60' : ''}`}>
+                  <tr key={file.id} className={`hover:bg-sky-50/50 transition ${isSelected ? 'bg-sky-50/60' : ''}`}>
                     <td className="py-2.5 px-3">
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleToggleSelect(file.id)}
-                        className="rounded border-slate-300 text-emerald-600"
+                        className="rounded border-slate-300 text-sky-600"
                       />
                     </td>
                     <td className="py-2.5 px-3">
@@ -358,7 +358,7 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
                         <button
                           onClick={() => handleDownloadWithProgress(file)}
                           title="下载文件"
-                          className="p-1 text-slate-400 hover:text-emerald-700"
+                          className="p-1 text-slate-400 hover:text-sky-700"
                         >
                           <Download className="w-3.5 h-3.5" />
                         </button>
@@ -395,7 +395,7 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
                 key={file.id}
                 onClick={() => handleToggleSelect(file.id)}
                 className={`bg-white rounded-lg border p-3 flex flex-col justify-between cursor-pointer transition shadow-2xs hover:shadow-sm ${
-                  isSelected ? 'border-emerald-600 bg-emerald-50/30 ring-1 ring-emerald-500' : 'border-emerald-900/10 hover:border-emerald-400'
+                  isSelected ? 'border-sky-600 bg-sky-50/30 ring-1 ring-sky-500' : 'border-sky-900/10 hover:border-sky-400'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -406,7 +406,7 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
                       e.stopPropagation();
                       handleToggleSelect(file.id);
                     }}
-                    className="rounded text-emerald-600"
+                    className="rounded text-sky-600"
                   />
                   <span className="text-[10px] text-slate-400">
                     {(file.size / (1024 * 1024)).toFixed(1)} MB
@@ -414,7 +414,7 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
                 </div>
 
                 <div className="flex flex-col items-center py-2 text-center">
-                  <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-700 mb-1.5">
+                  <div className="p-2.5 rounded-lg bg-sky-50 text-sky-700 mb-1.5">
                     {getFileIcon(file.type)}
                   </div>
                   <div className="text-xs font-semibold text-slate-800 truncate w-full" title={file.name}>
@@ -427,7 +427,7 @@ export const CloudDriveView: React.FC<CloudDriveViewProps> = ({
                   <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => handleDownloadWithProgress(file)}
-                      className="p-1 hover:text-emerald-700"
+                      className="p-1 hover:text-sky-700"
                     >
                       <Download className="w-3.5 h-3.5" />
                     </button>

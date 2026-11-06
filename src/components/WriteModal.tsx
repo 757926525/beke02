@@ -103,11 +103,11 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl border border-emerald-900/10 max-w-4xl w-full p-6 my-8 max-h-[90vh] flex flex-col relative">
+      <div className="bg-white rounded-xl shadow-2xl border border-sky-900/10 max-w-4xl w-full p-6 my-8 max-h-[90vh] flex flex-col relative">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 flex-shrink-0">
           <div className="flex items-center space-x-2">
-            <span className="w-8 h-8 rounded bg-emerald-600 text-white flex items-center justify-center font-bold">
+            <span className="w-8 h-8 rounded bg-sky-600 text-white flex items-center justify-center font-bold">
               ✍️
             </span>
             <div>
@@ -137,7 +137,7 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="例如: 探索边缘计算时代的云原生架构..."
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none"
               />
             </div>
             <div>
@@ -147,7 +147,7 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
               >
                 <option value="技术视界">技术视界</option>
                 <option value="多云架构">多云架构</option>
@@ -171,8 +171,8 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
                 placeholder="https://..."
                 className="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-md outline-none"
               />
-              <label className="flex items-center justify-center space-x-1 px-3 py-2 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-md text-xs font-medium cursor-pointer hover:bg-emerald-100 transition whitespace-nowrap">
-                <Upload className="w-3.5 h-3.5 text-emerald-600" />
+              <label className="flex items-center justify-center space-x-1 px-3 py-2 bg-sky-50 border border-sky-300 text-sky-800 rounded-md text-xs font-medium cursor-pointer hover:bg-sky-100 transition whitespace-nowrap">
+                <Upload className="w-3.5 h-3.5 text-sky-600" />
                 <span>{uploadingCover ? '上传中...' : '上传本地图片为封面'}</span>
                 <input
                   type="file"
@@ -191,8 +191,8 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
           </div>
 
           {/* Quick Toolbar: Insert Album Image / Video / Audio */}
-          <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-xs">
-            <span className="font-semibold text-emerald-800 flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-lg bg-sky-50/70 border border-sky-200/80 text-xs">
+            <span className="font-semibold text-sky-800 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" /> 快捷媒体插入:
             </span>
             <button
@@ -201,9 +201,9 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
                 setShowPhotoPicker(!showPhotoPicker);
                 setShowMediaPicker(false);
               }}
-              className="flex items-center space-x-1 px-2.5 py-1 bg-white border border-emerald-300 rounded text-slate-700 hover:text-emerald-700 hover:border-emerald-500 shadow-2xs transition"
+              className="flex items-center space-x-1 px-2.5 py-1 bg-white border border-sky-300 rounded text-slate-700 hover:text-sky-700 hover:border-sky-500 shadow-2xs transition"
             >
-              <ImageIcon className="w-3.5 h-3.5 text-emerald-600" />
+              <ImageIcon className="w-3.5 h-3.5 text-sky-600" />
               <span>一键插入云相册图片</span>
             </button>
             <button
@@ -212,16 +212,16 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
                 setShowMediaPicker(!showMediaPicker);
                 setShowPhotoPicker(false);
               }}
-              className="flex items-center space-x-1 px-2.5 py-1 bg-white border border-emerald-300 rounded text-slate-700 hover:text-emerald-700 hover:border-emerald-500 shadow-2xs transition"
+              className="flex items-center space-x-1 px-2.5 py-1 bg-white border border-sky-300 rounded text-slate-700 hover:text-sky-700 hover:border-sky-500 shadow-2xs transition"
             >
-              <Film className="w-3.5 h-3.5 text-emerald-600" />
+              <Film className="w-3.5 h-3.5 text-sky-600" />
               <span>一键插入视频与音乐</span>
             </button>
           </div>
 
           {/* Cloud Album Picker Modal Popover */}
           {showPhotoPicker && (
-            <div className="p-3 bg-white rounded-lg border border-emerald-300 shadow-md">
+            <div className="p-3 bg-white rounded-lg border border-sky-300 shadow-md">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-slate-700">选择要插入的相册图片 (点击即可插入正文):</span>
                 <button
@@ -237,10 +237,10 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
                   <div
                     key={img.id}
                     onClick={() => handleInsertPhoto(img)}
-                    className="group cursor-pointer border border-slate-200 rounded overflow-hidden hover:border-emerald-500 relative"
+                    className="group cursor-pointer border border-slate-200 rounded overflow-hidden hover:border-sky-500 relative"
                   >
                     <img src={img.imageUrl} alt={img.title} className="w-full h-16 object-cover" />
-                    <div className="text-[10px] p-1 truncate text-slate-600 group-hover:text-emerald-700 bg-white">
+                    <div className="text-[10px] p-1 truncate text-slate-600 group-hover:text-sky-700 bg-white">
                       {img.title}
                     </div>
                   </div>
@@ -256,7 +256,7 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
 
           {/* Media Picker Popover */}
           {showMediaPicker && (
-            <div className="p-3 bg-white rounded-lg border border-emerald-300 shadow-md">
+            <div className="p-3 bg-white rounded-lg border border-sky-300 shadow-md">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-slate-700">选择要插入的影音文件 (点击即可插入正文):</span>
                 <button
@@ -272,9 +272,9 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
                   <div
                     key={item.id}
                     onClick={() => handleInsertMedia(item)}
-                    className="flex items-center space-x-2 p-2 border border-slate-200 rounded hover:border-emerald-500 cursor-pointer bg-slate-50 hover:bg-emerald-50"
+                    className="flex items-center space-x-2 p-2 border border-slate-200 rounded hover:border-sky-500 cursor-pointer bg-slate-50 hover:bg-sky-50"
                   >
-                    {item.type === 'video' ? <Film className="w-4 h-4 text-rose-500" /> : <Music className="w-4 h-4 text-emerald-600" />}
+                    {item.type === 'video' ? <Film className="w-4 h-4 text-rose-500" /> : <Music className="w-4 h-4 text-sky-600" />}
                     <div className="text-xs truncate">
                       <div className="font-semibold text-slate-800">{item.title}</div>
                       <div className="text-[10px] text-slate-400">{item.artist || '站长'} · {item.type}</div>
@@ -310,7 +310,7 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
               value={content}
               onChange={e => setContent(e.target.value)}
               placeholder="在此输入精彩文章正文，支持 Markdown 标记与 HTML 媒体标签..."
-              className="w-full px-3 py-2 text-sm font-mono border border-slate-300 rounded-md focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none leading-relaxed"
+              className="w-full px-3 py-2 text-sm font-mono border border-slate-300 rounded-md focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none leading-relaxed"
             />
           </div>
 
@@ -340,7 +340,7 @@ export const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, onSubmi
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-medium shadow-xs transition disabled:opacity-50"
+              className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-xs font-medium shadow-xs transition disabled:opacity-50"
             >
               {submitting ? '发布中...' : '立即发布'}
             </button>

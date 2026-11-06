@@ -94,12 +94,12 @@ export const ShopView: React.FC<ShopViewProps> = ({
       </div>
 
       {successOrder && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between animate-fadeIn">
-          <div className="flex items-center space-x-2 text-emerald-800 text-xs font-medium">
-            <CheckCircle className="w-4 h-4 text-emerald-600" />
+        <div className="p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between animate-fadeIn">
+          <div className="flex items-center space-x-2 text-sky-800 text-xs font-medium">
+            <CheckCircle className="w-4 h-4 text-sky-600" />
             <span>恭喜！商品【{successOrder}】下单成功，已记录至服务端订单库！</span>
           </div>
-          <button onClick={() => setSuccessOrder(null)} className="text-emerald-500 hover:text-emerald-700">
+          <button onClick={() => setSuccessOrder(null)} className="text-sky-500 hover:text-sky-700">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -178,7 +178,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
                       <span className="font-mono text-xs text-slate-500">#{order.id}</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-600 border border-sky-200">
                         {order.status}
                       </span>
                       <span className="text-[10px] text-slate-400 font-mono">{order.createdAt}</span>
@@ -309,7 +309,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-emerald-600 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
+                className="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-sky-600 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
               >
                 {submitting ? '提交中...' : `确认并结缘 (¥${(selectedProduct.price * quantity).toFixed(2)})`}
               </button>

@@ -85,7 +85,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
       sender: 'visitor_402 (访客)',
       email: 'guest402@example.com',
       subject: '博客主题能否开源支持自定义本地背景？',
-      content: '非常喜欢现在的绿白 Outlook 风格，请问站长头像和 Hero 背景是否都能上传自己本地的照片？',
+      content: '非常喜欢现在的蓝白 Outlook 风格，请问站长头像和 Hero 背景是否都能上传自己本地的照片？',
       time: '2025-05-19 11:20',
       reply: '',
       status: 'unread'
@@ -182,13 +182,13 @@ export const AdminView: React.FC<AdminViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Real-time Cloudflare KV / D1 / R2 Priority Dual-Engine Indicator Bar */}
-      <div className="bg-white rounded-xl border border-emerald-900/10 p-4 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white rounded-xl border border-sky-900/10 p-4 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           {/* Honest Real-Time Indicator Light: Green only when really connected; slate/amber when unattached/zero */}
           <div className="relative flex items-center justify-center">
             <span className={`w-3.5 h-3.5 rounded-full ${
               storageStatus.kvConnected
-                ? 'bg-emerald-500 ring-4 ring-emerald-100 animate-pulse'
+                ? 'bg-sky-500 ring-4 ring-sky-100 animate-pulse'
                 : 'bg-slate-400'
             }`} />
           </div>
@@ -198,13 +198,13 @@ export const AdminView: React.FC<AdminViewProps> = ({
                 {storageStatus.kvConnected ? 'Cloudflare KV 优先加速引擎' : '本地文件型轻量引擎 (离线正常运行)'}
               </span>
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                storageStatus.kvConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                storageStatus.kvConnected ? 'bg-sky-100 text-sky-800' : 'bg-slate-100 text-slate-600'
               }`}>
                 {storageStatus.activeStorage}
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              命名空间: <strong className="text-slate-700">{storageStatus.kvNamespace}</strong> · 响应耗时: <strong className="text-emerald-700 font-mono">{storageStatus.syncLatencyMs}ms</strong>
+              命名空间: <strong className="text-slate-700">{storageStatus.kvNamespace}</strong> · 响应耗时: <strong className="text-sky-700 font-mono">{storageStatus.syncLatencyMs}ms</strong>
             </p>
           </div>
         </div>
@@ -222,7 +222,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
           <button
             onClick={fetchStatus}
             title="刷新状态探测"
-            className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 hover:text-emerald-600 transition"
+            className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 hover:text-sky-600 transition"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -230,11 +230,11 @@ export const AdminView: React.FC<AdminViewProps> = ({
       </div>
 
       {/* Admin Tabs */}
-      <div className="flex items-center space-x-1 border-b border-emerald-900/10 pb-2 overflow-x-auto no-scrollbar">
+      <div className="flex items-center space-x-1 border-b border-sky-900/10 pb-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('merged-email')}
           className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 ${
-            activeTab === 'merged-email' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50'
+            activeTab === 'merged-email' ? 'bg-sky-600 text-white shadow-xs' : 'text-slate-600 hover:bg-sky-50'
           }`}
         >
           <Mail className="w-3.5 h-3.5" />
@@ -244,7 +244,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         <button
           onClick={() => setActiveTab('merged-governance')}
           className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 ${
-            activeTab === 'merged-governance' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50'
+            activeTab === 'merged-governance' ? 'bg-sky-600 text-white shadow-xs' : 'text-slate-600 hover:bg-sky-50'
           }`}
         >
           <Users className="w-3.5 h-3.5" />
@@ -254,7 +254,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         <button
           onClick={() => setActiveTab('bindings')}
           className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 ${
-            activeTab === 'bindings' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50'
+            activeTab === 'bindings' ? 'bg-sky-600 text-white shadow-xs' : 'text-slate-600 hover:bg-sky-50'
           }`}
         >
           <HardDrive className="w-3.5 h-3.5" />
@@ -264,7 +264,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         <button
           onClick={() => setActiveTab('advanced')}
           className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 ${
-            activeTab === 'advanced' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50'
+            activeTab === 'advanced' ? 'bg-sky-600 text-white shadow-xs' : 'text-slate-600 hover:bg-sky-50'
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
@@ -276,9 +276,9 @@ export const AdminView: React.FC<AdminViewProps> = ({
       {activeTab === 'merged-email' && (
         <div className="space-y-6">
           {/* Sub-partition 1: Email API & Cloudflare Email Routing */}
-          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-4">
+          <div className="bg-white rounded-xl border border-sky-900/10 p-5 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
-              <Mail className="w-4 h-4 text-emerald-600" />
+              <Mail className="w-4 h-4 text-sky-600" />
               <span>子分区一：邮件 API 与 Cloudflare Email Routing 服务配置</span>
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
@@ -311,10 +311,10 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </div>
 
           {/* Sub-partition 2: Site Mailbox & Reply Manager */}
-          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-4">
+          <div className="bg-white rounded-xl border border-sky-900/10 p-5 shadow-xs space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <Inbox className="w-4 h-4 text-emerald-600" />
+                <Inbox className="w-4 h-4 text-sky-600" />
                 <span>子分区二：站内信箱与回复消息管理 (支持直接删除)</span>
               </h3>
               <span className="text-xs text-slate-400">共 {inboxMessages.length} 封往来消息</span>
@@ -328,7 +328,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       <span className="font-bold text-slate-800">{msg.sender}</span>
                       <span className="text-slate-400">({msg.email})</span>
                       <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${
-                        msg.status === 'replied' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        msg.status === 'replied' ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800'
                       }`}>
                         {msg.status === 'replied' ? '已回复' : '待回复'}
                       </span>
@@ -350,7 +350,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
                   {/* Show replied text if exists */}
                   {msg.reply && (
-                    <div className="p-2.5 rounded bg-emerald-50/70 border border-emerald-200 text-emerald-900">
+                    <div className="p-2.5 rounded bg-sky-50/70 border border-sky-200 text-sky-900">
                       <strong className="block text-[11px] mb-0.5">站长回复：</strong>
                       {msg.reply}
                     </div>
@@ -367,7 +367,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                     />
                     <button
                       onClick={() => handleSendReply(msg.id)}
-                      className="flex items-center space-x-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium"
+                      className="flex items-center space-x-1 px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded text-xs font-medium"
                     >
                       <Send className="w-3 h-3" />
                       <span>回复消息</span>
@@ -384,9 +384,9 @@ export const AdminView: React.FC<AdminViewProps> = ({
       {activeTab === 'merged-governance' && (
         <div className="space-y-6">
           {/* Sub-partition 1: All User Messages & Bottom Notices */}
-          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-3">
+          <div className="bg-white rounded-xl border border-sky-900/10 p-5 shadow-xs space-y-3">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
-              <Sliders className="w-4 h-4 text-emerald-600" />
+              <Sliders className="w-4 h-4 text-sky-600" />
               <span>子分区一：全站用户消息与通知管理 (底部控制区)</span>
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -412,16 +412,16 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </div>
 
           {/* Sub-partition 2: Theme Palette, Layout Switcher & Local Photos */}
-          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-4">
+          <div className="bg-white rounded-xl border border-sky-900/10 p-5 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
-              <Palette className="w-4 h-4 text-emerald-600" />
+              <Palette className="w-4 h-4 text-sky-600" />
               <span>子分区二：主题调色、页面布局与本地图片设定 (头像/背景/Hero)</span>
             </h3>
 
             {/* Layout Switcher moved into Settings */}
-            <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-              <label className="block text-xs font-bold text-emerald-900 mb-1.5 flex items-center gap-1.5">
-                <Layout className="w-4 h-4 text-emerald-700" />
+            <div className="p-3 bg-sky-50 rounded-lg border border-sky-200">
+              <label className="block text-xs font-bold text-sky-900 mb-1.5 flex items-center gap-1.5">
+                <Layout className="w-4 h-4 text-sky-700" />
                 <span>切换页面布局风格 (已移至设置区内部)</span>
               </label>
               <div className="flex items-center space-x-3 text-xs">
@@ -433,7 +433,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       value={mode}
                       checked={formData.themeLayout === mode}
                       onChange={() => setFormData({ ...formData, themeLayout: mode })}
-                      className="text-emerald-600"
+                      className="text-sky-600"
                     />
                     <span className="capitalize font-medium text-slate-700">
                       {mode === 'default' ? '标准宽幅 (Default)' : (mode === 'compact' ? '紧凑精致 (Compact)' : '超宽沉浸 (Wide 1600px)')}
@@ -448,8 +448,8 @@ export const AdminView: React.FC<AdminViewProps> = ({
               <div className="p-3 bg-slate-50 rounded border border-slate-200 space-y-2">
                 <span className="font-bold text-slate-800 block">站长头像设定 (支持本地上传)</span>
                 <div className="flex items-center space-x-3">
-                  <img src={formData.avatar} alt="Avatar preview" className="w-12 h-12 rounded-full object-cover border border-emerald-500" />
-                  <label className="px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-700 hover:text-emerald-700 cursor-pointer text-xs font-medium shadow-2xs">
+                  <img src={formData.avatar} alt="Avatar preview" className="w-12 h-12 rounded-full object-cover border border-sky-500" />
+                  <label className="px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-700 hover:text-sky-700 cursor-pointer text-xs font-medium shadow-2xs">
                     上传本地头像
                     <input
                       type="file"
@@ -464,8 +464,8 @@ export const AdminView: React.FC<AdminViewProps> = ({
               <div className="p-3 bg-slate-50 rounded border border-slate-200 space-y-2">
                 <span className="font-bold text-slate-800 block">首页背景照片 (Hero Banner 支持本地上传)</span>
                 <div className="flex items-center space-x-3">
-                  <img src={heroData.bannerImage} alt="Hero banner" className="w-16 h-10 rounded object-cover border border-emerald-500" />
-                  <label className="px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-700 hover:text-emerald-700 cursor-pointer text-xs font-medium shadow-2xs">
+                  <img src={heroData.bannerImage} alt="Hero banner" className="w-16 h-10 rounded object-cover border border-sky-500" />
+                  <label className="px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-700 hover:text-sky-700 cursor-pointer text-xs font-medium shadow-2xs">
                     上传本地背景图
                     <input
                       type="file"
@@ -480,9 +480,9 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </div>
 
           {/* Sub-partition 3: Privacy & Guest Control Switchers */}
-          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-3">
+          <div className="bg-white rounded-xl border border-sky-900/10 p-5 shadow-xs space-y-3">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
-              <EyeOff className="w-4 h-4 text-emerald-600" />
+              <EyeOff className="w-4 h-4 text-sky-600" />
               <span>子分区三：注册控制与访客隐藏选区开关 (仅管理员可见)</span>
             </h3>
             <div className="space-y-2 text-xs">
@@ -491,7 +491,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   type="checkbox"
                   checked={!!formData.hideNonBlogForGuests}
                   onChange={e => setFormData({ ...formData, hideNonBlogForGuests: e.target.checked })}
-                  className="rounded text-emerald-600"
+                  className="rounded text-sky-600"
                 />
                 <span className="text-slate-700">访客仅允许浏览博客专栏，对未登录访客隐藏非核心商业模块</span>
               </label>
@@ -501,7 +501,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   type="checkbox"
                   checked={!!formData.requireEmailRegistration}
                   onChange={e => setFormData({ ...formData, requireEmailRegistration: e.target.checked })}
-                  className="rounded text-emerald-600"
+                  className="rounded text-sky-600"
                 />
                 <span className="text-slate-700">新用户注册时强制验证电子邮箱</span>
               </label>
@@ -509,10 +509,10 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </div>
 
           {/* Sub-partition 4: Registered Users List */}
-          <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-3">
+          <div className="bg-white rounded-xl border border-sky-900/10 p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-emerald-600" />
+                <UserCheck className="w-4 h-4 text-sky-600" />
                 <span>子分区四：已注册用户管理列表 (项目唯一管理员专属)</span>
               </h3>
               <span className="text-xs text-slate-400">共 {registeredUsers.length} 位系统用户</span>
@@ -530,7 +530,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   </div>
                   <div className="flex items-center space-x-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      user.role === 'admin' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
+                      user.role === 'admin' ? 'bg-rose-100 text-rose-800' : 'bg-sky-100 text-sky-800'
                     }`}>
                       {user.role === 'admin' ? '唯一站长' : '注册用户'}
                     </span>
@@ -553,9 +553,9 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
       {/* Tab 3: Cloudflare Bindings & Nutstore / WebDAV 4-parameter interface */}
       {activeTab === 'bindings' && (
-        <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-5">
+        <div className="bg-white rounded-xl border border-sky-900/10 p-5 shadow-xs space-y-5">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
-            <Link2 className="w-4 h-4 text-emerald-600" />
+            <Link2 className="w-4 h-4 text-sky-600" />
             <span>坚果云 / WebDAV 远端同步 4 大核心接口</span>
           </h3>
 
@@ -621,7 +621,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <button
               onClick={handleTestWebDav}
               disabled={webdavTesting}
-              className="px-4 py-2 rounded bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-semibold hover:bg-emerald-100 transition disabled:opacity-50"
+              className="px-4 py-2 rounded bg-sky-50 text-sky-800 border border-sky-300 text-xs font-semibold hover:bg-sky-100 transition disabled:opacity-50"
             >
               {webdavTesting ? '正在验证 WebDAV 接口...' : '测试坚果云 / WebDAV 连通性'}
             </button>
@@ -632,9 +632,9 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
       {/* Tab 4: AI & Architecture settings */}
       {activeTab === 'advanced' && (
-        <div className="bg-white rounded-xl border border-emerald-900/10 p-5 shadow-xs space-y-4 text-xs">
+        <div className="bg-white rounded-xl border border-sky-900/10 p-5 shadow-xs space-y-4 text-xs">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
-            <Cpu className="w-4 h-4 text-emerald-600" />
+            <Cpu className="w-4 h-4 text-sky-600" />
             <span>智能编程 AI 模型与算力路由</span>
           </h3>
 
@@ -673,14 +673,14 @@ export const AdminView: React.FC<AdminViewProps> = ({
       )}
 
       {/* Bottom Sticky Save Button */}
-      <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-emerald-900/10 shadow-xs">
+      <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-sky-900/10 shadow-xs">
         <span className="text-xs text-slate-400">
           所有设置即时提交写入后端数据库，刷新页面自动保持最新状态。
         </span>
         <button
           onClick={handleSaveAll}
           disabled={saving}
-          className="flex items-center space-x-1.5 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition disabled:opacity-50"
+          className="flex items-center space-x-1.5 px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold shadow-xs transition disabled:opacity-50"
         >
           {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : (saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />)}
           <span>{saving ? '保存中...' : (saveSuccess ? '保存成功！' : '保存系统所有设定')}</span>

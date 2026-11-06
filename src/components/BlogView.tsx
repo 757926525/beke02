@@ -57,7 +57,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
       {/* Main Post Section */}
       <div className="lg:col-span-3 space-y-6">
         {/* Controls Ribbon: Category, Search & 4 View Modes */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-emerald-900/10 shadow-xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-sky-900/10 shadow-xs">
           <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar">
             {categories.map(cat => (
               <button
@@ -65,8 +65,8 @@ export const BlogView: React.FC<BlogViewProps> = ({
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition ${
                   selectedCategory === cat
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50'
+                    ? 'bg-sky-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-sky-700 hover:bg-sky-50'
                 }`}
               >
                 {cat}
@@ -82,7 +82,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
                 placeholder="搜索博文或标签..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-500 focus:bg-white transition"
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-sky-500 focus:bg-white transition"
               />
             </div>
 
@@ -91,28 +91,28 @@ export const BlogView: React.FC<BlogViewProps> = ({
               <button
                 onClick={() => setViewMode('small')}
                 title="小图紧凑视图"
-                className={`p-1 rounded ${viewMode === 'small' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`p-1 rounded ${viewMode === 'small' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <Grid3X3 className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setViewMode('medium')}
                 title="中图标准视图"
-                className={`p-1 rounded ${viewMode === 'medium' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`p-1 rounded ${viewMode === 'medium' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setViewMode('large')}
                 title="大图巨幕视图"
-                className={`p-1 rounded ${viewMode === 'large' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`p-1 rounded ${viewMode === 'large' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <Columns className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setViewMode('detail')}
                 title="详细信息列表"
-                className={`p-1 rounded ${viewMode === 'detail' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`p-1 rounded ${viewMode === 'detail' ? 'bg-white text-sky-700 shadow-2xs' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <List className="w-3.5 h-3.5" />
               </button>
@@ -122,7 +122,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
 
         {/* Posts Rendering based on ViewMode */}
         {filteredPosts.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-lg border border-dashed border-emerald-300">
+          <div className="text-center py-16 bg-white rounded-lg border border-dashed border-sky-300">
             <p className="text-sm text-slate-500">未检索到匹配文章</p>
           </div>
         ) : (
@@ -144,7 +144,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
                   <div
                     key={post.id}
                     onClick={() => onSelectPost(post)}
-                    className="p-3 bg-white rounded-lg border border-emerald-900/10 hover:border-emerald-500 shadow-2xs hover:shadow-sm cursor-pointer transition flex items-center justify-between gap-4 group"
+                    className="p-3 bg-white rounded-lg border border-sky-900/10 hover:border-sky-500 shadow-2xs hover:shadow-sm cursor-pointer transition flex items-center justify-between gap-4 group"
                   >
                     <div className="flex items-center space-x-3 truncate">
                       <img
@@ -154,10 +154,10 @@ export const BlogView: React.FC<BlogViewProps> = ({
                       />
                       <div className="truncate">
                         <div className="flex items-center space-x-2">
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 font-semibold">
                             {post.category}
                           </span>
-                          <h3 className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 truncate">
+                          <h3 className="text-sm font-bold text-slate-800 group-hover:text-sky-700 truncate">
                             {post.title}
                           </h3>
                         </div>
@@ -188,7 +188,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
                 <article
                   key={post.id}
                   onClick={() => onSelectPost(post)}
-                  className={`bg-white rounded-lg border border-emerald-900/10 hover:border-emerald-500 shadow-2xs hover:shadow-md cursor-pointer transition flex flex-col overflow-hidden group ${
+                  className={`bg-white rounded-lg border border-sky-900/10 hover:border-sky-500 shadow-2xs hover:shadow-md cursor-pointer transition flex flex-col overflow-hidden group ${
                     viewMode === 'large' ? 'md:flex-row h-auto md:h-64' : ''
                   }`}
                 >
@@ -211,13 +211,13 @@ export const BlogView: React.FC<BlogViewProps> = ({
                     <div>
                       <div className="flex items-center space-x-2 text-[11px] text-slate-400 mb-1.5">
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-emerald-600" />
+                          <Calendar className="w-3 h-3 text-sky-600" />
                           {post.date}
                         </span>
                         <span>·</span>
                         <span>{post.authorName || 'fox 站长'}</span>
                       </div>
-                      <h3 className={`font-bold text-slate-900 group-hover:text-emerald-700 transition leading-snug line-clamp-2 ${
+                      <h3 className={`font-bold text-slate-900 group-hover:text-sky-700 transition leading-snug line-clamp-2 ${
                         viewMode === 'small' ? 'text-xs' : (viewMode === 'large' ? 'text-lg' : 'text-sm')
                       }`}>
                         {post.title}
@@ -275,16 +275,16 @@ export const BlogView: React.FC<BlogViewProps> = ({
       {/* Right Sidebar: Outlook Style Clean Cards */}
       <div className="space-y-6">
         {/* Author Card */}
-        <div className="bg-white p-5 rounded-lg border border-emerald-900/10 shadow-xs">
+        <div className="bg-white p-5 rounded-lg border border-sky-900/10 shadow-xs">
           <div className="flex items-center space-x-3">
             <img
               src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
               alt="fox"
-              className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500 shadow-2xs"
+              className="w-12 h-12 rounded-full object-cover border-2 border-sky-500 shadow-2xs"
             />
             <div>
               <h4 className="font-bold text-sm text-slate-800">fox · 唯一站长</h4>
-              <p className="text-xs text-emerald-700">青丘夜雪 · 绿白 Outlook 空间</p>
+              <p className="text-xs text-sky-700">青丘夜雪 · 蓝白 Outlook 空间</p>
             </div>
           </div>
           <p className="text-xs text-slate-600 mt-3 leading-relaxed">
@@ -293,7 +293,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
         </div>
 
         {/* Recent History Footprints */}
-        <div className="bg-white p-4 rounded-lg border border-emerald-900/10 shadow-xs">
+        <div className="bg-white p-4 rounded-lg border border-sky-900/10 shadow-xs">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
             <span className="text-xs font-bold text-slate-800">近期足迹历程</span>
             {history.length > 0 && (
@@ -313,7 +313,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
                   const p = posts.find(x => x.id === item.postId);
                   if (p) onSelectPost(p);
                 }}
-                className="p-1.5 rounded hover:bg-emerald-50 cursor-pointer text-xs transition"
+                className="p-1.5 rounded hover:bg-sky-50 cursor-pointer text-xs transition"
               >
                 <div className="text-slate-800 font-medium truncate">{item.title}</div>
                 <div className="text-[10px] text-slate-400 flex items-center justify-between mt-0.5">

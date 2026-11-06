@@ -62,24 +62,24 @@ const INITIAL_DATA: DatabaseData = {
     }
   ],
   hero: {
-    tag: '灵狐踏雪 · 随心而述 · 碧玉长空',
+    tag: '灵狐逸仙 · 随心而述 · 碧水蓝天',
     title: '现代敏捷多云博客与云端个人空间',
-    description: '原生适配多云边缘生态（Cloudflare D1 / R2 / KV / Workers AI 与 阿里云 / 腾讯云），优雅绿白视界，轻量高效。',
-    bannerImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
+    description: '原生适配多云边缘生态（Cloudflare D1 / R2 / KV / Workers AI 与 阿里云 / 腾讯云），优雅蓝白视界，轻量高效。',
+    bannerImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
     storageUsed: 0, // Default is 0 until real files or cloud pools are connected
     storageTotal: 0, // Default 0 when unconfigured
   },
   settings: {
     siteName: 'fox · 现代多云数字空间',
     authorName: 'fox (站长)',
-    subtitle: '微软 Outlook 灵感优雅绿白美学 · 云边协同',
+    subtitle: '现代蓝白纯净美学 · 手机/电脑自适应 · 云边协同',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
     headerBrand: 'fox',
     aiModel: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
     aiApiKey: '',
     aiBaseUrl: 'https://api.deepseek.com/v1',
     aiSystemPrompt: '你是由 fox 博客驱动的高级智能架构师与代码工匠。请提供符合微软工程标准与清晰逻辑的解答。',
-    themeColor: '#059669', // Emerald Outlook Green
+    themeColor: '#0284c7', // Sky Azure Blue
     themeLayout: 'default',
     d1Enabled: false,
     r2BucketName: '',

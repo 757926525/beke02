@@ -90,12 +90,12 @@ export const AIView: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Top Banner Ribbon */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-emerald-900/10 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-sky-900/10 shadow-xs">
         <div>
           <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-emerald-600" />
+            <Cpu className="w-5 h-5 text-sky-600" />
             <span>编程 AI · 智能工作台</span>
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold border border-emerald-200">
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 font-semibold border border-sky-200">
               真实模型可用 · 即时生成
             </span>
           </h2>
@@ -106,11 +106,11 @@ export const AIView: React.FC = () => {
 
         {/* Model Selector */}
         <div className="flex items-center space-x-2">
-          <Settings2 className="w-4 h-4 text-emerald-600" />
+          <Settings2 className="w-4 h-4 text-sky-600" />
           <select
             value={currentModel}
             onChange={e => setCurrentModel(e.target.value)}
-            className="text-xs px-2.5 py-1.5 border border-slate-300 rounded-md bg-white text-slate-700 outline-none focus:border-emerald-500 font-medium"
+            className="text-xs px-2.5 py-1.5 border border-slate-300 rounded-md bg-white text-slate-700 outline-none focus:border-sky-500 font-medium"
           >
             <option value="DeepSeek Coder V2 (推荐)">DeepSeek Coder V2 (推荐)(全栈编程)</option>
             <option value="Qwen 2.5 Coder 72B">Qwen 2.5 Coder 72B (超强逻辑)</option>
@@ -121,7 +121,7 @@ export const AIView: React.FC = () => {
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="bg-white rounded-xl border border-emerald-900/10 shadow-xs p-4 sm:p-6 min-h-[460px] max-h-[580px] overflow-y-auto space-y-4">
+      <div className="bg-white rounded-xl border border-sky-900/10 shadow-xs p-4 sm:p-6 min-h-[460px] max-h-[580px] overflow-y-auto space-y-4">
         {messages.map((m, idx) => {
           const isUser = m.role === 'user';
           return (
@@ -131,7 +131,7 @@ export const AIView: React.FC = () => {
             >
               {/* Avatar */}
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                isUser ? 'bg-emerald-600 text-white' : 'bg-rose-500 text-white shadow-2xs'
+                isUser ? 'bg-sky-600 text-white' : 'bg-rose-500 text-white shadow-2xs'
               }`}>
                 {isUser ? '👤' : '🦊'}
               </div>
@@ -139,17 +139,17 @@ export const AIView: React.FC = () => {
               {/* Message Bubble */}
               <div className={`relative max-w-2xl rounded-xl p-4 text-xs leading-relaxed ${
                 isUser
-                  ? 'bg-emerald-600 text-white font-medium shadow-xs'
-                  : 'bg-[#f8faf9] text-slate-800 border border-emerald-100 shadow-2xs'
+                  ? 'bg-sky-600 text-white font-medium shadow-xs'
+                  : 'bg-[#f8faf9] text-slate-800 border border-sky-100 shadow-2xs'
               }`}>
                 {/* One click copy code button for assistant messages */}
                 {!isUser && (
                   <button
                     onClick={() => handleCopyCode(m.content, idx)}
                     title="复制回答或代码"
-                    className="absolute top-3 right-3 p-1 rounded bg-white border border-slate-200 text-slate-500 hover:text-emerald-700 hover:border-emerald-500 transition"
+                    className="absolute top-3 right-3 p-1 rounded bg-white border border-slate-200 text-slate-500 hover:text-sky-700 hover:border-sky-500 transition"
                   >
-                    {copiedIndex === idx ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedIndex === idx ? <Check className="w-3.5 h-3.5 text-sky-600" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 )}
 
@@ -163,7 +163,7 @@ export const AIView: React.FC = () => {
 
         {loading && (
           <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
-            <RefreshCw className="w-4 h-4 text-emerald-600 animate-spin" />
+            <RefreshCw className="w-4 h-4 text-sky-600 animate-spin" />
             <span>AI 架构师正在深度思考并编写代码...</span>
           </div>
         )}
@@ -172,14 +172,14 @@ export const AIView: React.FC = () => {
       {/* Quick Prompt Command Bar */}
       <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1 text-xs">
         <span className="text-slate-400 whitespace-nowrap flex items-center gap-1">
-          <Terminal className="w-3.5 h-3.5 text-emerald-600" />
+          <Terminal className="w-3.5 h-3.5 text-sky-600" />
           快速代码指令:
         </span>
         {quickPrompts.map((prompt, i) => (
           <button
             key={i}
             onClick={() => handleSend(prompt)}
-            className="px-2.5 py-1 bg-white border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 text-slate-600 rounded-full whitespace-nowrap shadow-2xs transition"
+            className="px-2.5 py-1 bg-white border border-slate-200 hover:border-sky-500 hover:text-sky-700 text-slate-600 rounded-full whitespace-nowrap shadow-2xs transition"
           >
             {prompt}
           </button>
@@ -187,7 +187,7 @@ export const AIView: React.FC = () => {
       </div>
 
       {/* Input Form Bar */}
-      <div className="flex items-center space-x-2 bg-white p-2 rounded-xl border border-emerald-900/10 shadow-xs">
+      <div className="flex items-center space-x-2 bg-white p-2 rounded-xl border border-sky-900/10 shadow-xs">
         <input
           type="text"
           value={input}
@@ -199,7 +199,7 @@ export const AIView: React.FC = () => {
         <button
           onClick={() => handleSend()}
           disabled={loading || !input.trim()}
-          className="flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium shadow-xs transition disabled:opacity-50"
+          className="flex items-center space-x-1.5 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-medium shadow-xs transition disabled:opacity-50"
         >
           <Send className="w-3.5 h-3.5" />
           <span>发送</span>

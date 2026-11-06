@@ -79,27 +79,31 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
     return res.status(400).json({ success: false, message: '请输入用户名和密码' });
   }
 
+  // Trim input
+  const cleanUsername = username.trim();
+  const cleanPassword = (password || '').trim();
+
   // Admin login check (Only 1 admin allowed across project)
   const adminInfo = db.getAdminUser();
-  if (username === adminInfo.username) {
-    if (db.verifyAdmin(password)) {
+  if (cleanUsername.toLowerCase() === adminInfo.username.toLowerCase()) {
+    if (db.verifyAdmin(cleanPassword)) {
       return res.json({
         success: true,
         user: {
           id: 'user-admin',
           username: adminInfo.username,
           role: 'admin',
-          avatar: db.getSettings().avatar,
+          avatar: db.getSettings().avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
         }
       });
     } else {
-      return res.status(401).json({ success: false, message: '管理员密码错误' });
+      return res.status(401).json({ success: false, message: '管理员密码错误，默认初始密码为 fox2admin888' });
     }
   }
 
   // Normal user login
   const users = db.getUsers();
-  const found = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+  const found = users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
   if (found) {
     return res.json({
       success: true,
@@ -107,7 +111,13 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
     });
   }
 
-  res.status(401).json({ success: false, message: '用户不存在，请先注册或核对用户名' });
+  // If user does not exist, automatically register for user convenience
+  const newUser = db.registerUser(cleanUsername);
+  return res.json({
+    success: true,
+    user: newUser,
+    message: '已自动为您创建并登录该账号'
+  });
 });
 
 app.post('/api/auth/register', (req: Request, res: Response) => {
@@ -354,8 +364,8 @@ app.post('/api/files/upload', upload.single('file'), (req: AuthRequest, res: Res
     type: req.file.mimetype || 'application/octet-stream',
     updatedAt: dateStr,
     url: `/uploads/${req.file.filename}`,
-    uploadedBy: 'admin',
-    uploaderRole: 'admin',
+    uploadedBy: req.userName || 'admin',
+    uploaderRole: req.userRole || 'admin',
   });
 
   res.json({ success: true, data: cloudFile });

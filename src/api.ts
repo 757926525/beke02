@@ -13,15 +13,51 @@ import {
   MediaTrack
 } from './types';
 
-// In-memory auth state (Zero localStorage!)
-let currentAuthRole: 'admin' | 'user' | 'guest' = 'admin'; // Default developer session can be switched
-let currentUserId = 'user-admin';
-let currentUserName = 'fox (站长)';
+// Auth session state (Stored in sessionStorage for smooth session retention during page refreshes)
+const SESSION_KEY = 'fox2_auth_session';
+
+const getInitialSession = (): { role: 'admin' | 'user' | 'guest'; userId: string; userName: string } => {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.role) return parsed;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return {
+    role: 'admin',
+    userId: 'user-admin',
+    userName: 'fox (站长)',
+  };
+};
+
+const initialSession = getInitialSession();
+let currentAuthRole: 'admin' | 'user' | 'guest' = initialSession.role;
+let currentUserId = initialSession.userId;
+let currentUserName = initialSession.userName;
 
 export const setAuthSession = (role: 'admin' | 'user' | 'guest', id: string, name: string) => {
   currentAuthRole = role;
   currentUserId = id;
   currentUserName = name;
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ role, userId: id, userName: name }));
+  } catch (e) {
+    // ignore
+  }
+};
+
+export const clearAuthSession = () => {
+  currentAuthRole = 'guest';
+  currentUserId = 'guest';
+  currentUserName = '访客';
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch (e) {
+    // ignore
+  }
 };
 
 export const getAuthSession = () => ({

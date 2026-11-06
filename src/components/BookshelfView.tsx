@@ -98,11 +98,11 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Bookshelf Ribbon: Upload, Format Info & Guide */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-emerald-900/10 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-sky-900/10 shadow-xs">
         <div>
           <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
             <span>📚 随身私藏数字书架</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-normal">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 font-normal">
               支持 EPUB / PDF / TXT
             </span>
           </h2>
@@ -116,12 +116,12 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
             onClick={() => setShowFormatGuide(!showFormatGuide)}
             className="flex items-center space-x-1 px-3 py-1.5 rounded-md border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition"
           >
-            <Info className="w-3.5 h-3.5 text-emerald-600" />
+            <Info className="w-3.5 h-3.5 text-sky-600" />
             <span>格式支持说明</span>
           </button>
 
           {isAdmin && (
-            <label className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 cursor-pointer shadow-xs transition">
+            <label className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-sky-600 text-white text-xs font-medium hover:bg-sky-700 cursor-pointer shadow-xs transition">
               <Upload className="w-3.5 h-3.5" />
               <span>{uploadingBook ? '上传解析中...' : '上传本地电子书'}</span>
               <input
@@ -138,14 +138,14 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
 
       {/* Format Explanation Guide Box */}
       {showFormatGuide && (
-        <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-slate-700 space-y-2">
-          <div className="font-bold text-emerald-900 flex items-center gap-1.5">
-            <CheckCircle className="w-4 h-4 text-emerald-600" />
+        <div className="p-4 rounded-lg bg-sky-50 border border-sky-200 text-xs text-slate-700 space-y-2">
+          <div className="font-bold text-sky-900 flex items-center gap-1.5">
+            <CheckCircle className="w-4 h-4 text-sky-600" />
             电子书格式兼容说明：
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-600">
             <div>
-              <strong className="text-emerald-800">✅ 完美支持的格式：</strong>
+              <strong className="text-sky-800">✅ 完美支持的格式：</strong>
               <ul className="list-disc list-inside mt-1 space-y-0.5">
                 <li><strong>.EPUB</strong>：现代电子出版标准，支持章节流式排版；</li>
                 <li><strong>.PDF</strong>：版面固定文档，图文严谨对照；</li>
@@ -169,7 +169,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
         {books.map(book => (
           <div
             key={book.id}
-            className="bg-white rounded-xl border border-emerald-900/10 hover:border-emerald-500 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden group"
+            className="bg-white rounded-xl border border-sky-900/10 hover:border-sky-500 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden group"
           >
             <div className="flex p-4 gap-4 flex-1">
               {/* Cover */}
@@ -184,10 +184,10 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
               {/* Info */}
               <div className="flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold uppercase">
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-sky-50 text-sky-700 font-semibold uppercase">
                     {book.format || 'EPUB'} · {book.category}
                   </span>
-                  <h3 className="font-bold text-sm text-slate-900 mt-1 line-clamp-1 group-hover:text-emerald-700 transition">
+                  <h3 className="font-bold text-sm text-slate-900 mt-1 line-clamp-1 group-hover:text-sky-700 transition">
                     {book.title}
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">{book.author}</p>
@@ -199,11 +199,11 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
                 <div className="mt-2">
                   <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
                     <span>研读进度</span>
-                    <span className="font-mono text-emerald-700 font-bold">{book.progress}%</span>
+                    <span className="font-mono text-sky-700 font-bold">{book.progress}%</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-emerald-600 h-1.5 rounded-full"
+                      className="bg-sky-600 h-1.5 rounded-full"
                       style={{ width: `${book.progress}%` }}
                     />
                   </div>
@@ -218,7 +218,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
                   setSelectedBook(book);
                   setActiveChapterIndex(0);
                 }}
-                className="flex items-center space-x-1 text-emerald-700 font-medium hover:text-emerald-800"
+                className="flex items-center space-x-1 text-sky-700 font-medium hover:text-sky-800"
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>沉浸研读</span>
@@ -227,7 +227,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
               <button
                 onClick={() => handleDownloadBook(book)}
                 title="离线下载电子书"
-                className="flex items-center space-x-1 text-slate-500 hover:text-emerald-700"
+                className="flex items-center space-x-1 text-slate-500 hover:text-sky-700"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>下载副本</span>
@@ -247,7 +247,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
           <div className={`bg-white flex flex-col ${
             isMobileFullscreen
               ? 'w-full h-full'
-              : 'max-w-4xl w-full h-[85vh] rounded-xl shadow-2xl border border-emerald-900/20 overflow-hidden'
+              : 'max-w-4xl w-full h-[85vh] rounded-xl shadow-2xl border border-sky-900/20 overflow-hidden'
           }`}>
             {/* Top Toolbar (Respects safe area on mobile) */}
             <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between bg-[#f8faf9] flex-shrink-0">
@@ -256,7 +256,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
                   {selectedBook.title}
                 </span>
                 <span className="text-xs text-slate-400">/</span>
-                <span className="text-xs text-emerald-700 font-medium truncate">
+                <span className="text-xs text-sky-700 font-medium truncate">
                   {selectedBook.chapters[activeChapterIndex]?.title}
                 </span>
               </div>
@@ -266,7 +266,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
                 <button
                   onClick={() => setIsMobileFullscreen(!isMobileFullscreen)}
                   title={isMobileFullscreen ? '退出手机全屏' : '手机全屏研读 (不挡顶栏)'}
-                  className="p-1.5 rounded-md text-slate-500 hover:text-emerald-700 hover:bg-slate-200 transition"
+                  className="p-1.5 rounded-md text-slate-500 hover:text-sky-700 hover:bg-slate-200 transition"
                 >
                   {isMobileFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                 </button>
@@ -295,8 +295,8 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
                       }}
                       className={`w-full text-left px-2.5 py-1.5 rounded text-xs transition ${
                         activeChapterIndex === idx
-                          ? 'bg-emerald-600 text-white font-medium'
-                          : 'text-slate-600 hover:bg-emerald-50'
+                          ? 'bg-sky-600 text-white font-medium'
+                          : 'text-slate-600 hover:bg-sky-50'
                       }`}
                     >
                       {ch.title}

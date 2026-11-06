@@ -71,8 +71,8 @@ export const HistoryManagerView: React.FC<HistoryManagerViewProps> = ({
               <Clock className="w-3.5 h-3.5" />
               足迹管家
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-sky-600 border border-sky-200/60 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
               {storageType === 'kv' ? 'Cloudflare KV 优先持久化同步' : '边缘数据库 D1 同步'}
             </span>
           </div>

@@ -16,7 +16,9 @@ import {
   Bell,
   User,
   LogOut,
-  LogIn
+  LogIn,
+  Monitor,
+  Smartphone
 } from 'lucide-react';
 import { NavTab, User as UserType } from '../types';
 
@@ -31,6 +33,8 @@ interface NavbarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   hasUnreadMessages?: boolean;
+  layoutMode: 'desktop' | 'mobile';
+  onToggleLayoutMode: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -44,6 +48,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   isCollapsed,
   onToggleCollapse,
   hasUnreadMessages = false,
+  layoutMode,
+  onToggleLayoutMode,
 }) => {
   const isAdmin = currentUser?.role === 'admin';
   const isGuest = !currentUser;
@@ -63,8 +69,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-emerald-900/10 shadow-xs transition-all duration-300">
-      {/* Top Outlook Style Header Ribbon */}
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-sky-900/10 shadow-xs transition-all duration-300">
+      {/* Top Header Ribbon with Blue & White palette */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-15">
           {/* Brand & Status Ribbon */}
@@ -73,42 +79,61 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onTabChange('blog')}
               className="flex items-center space-x-2.5 text-left group focus:outline-none"
             >
-              <div className="w-9 h-9 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/20 group-hover:bg-emerald-700 transition">
+              <div className="w-9 h-9 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-sm shadow-sky-500/20 group-hover:bg-sky-700 transition">
                 <span className="font-black text-lg tracking-wider">🦊</span>
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg text-slate-800 tracking-tight flex items-center gap-1.5">
                   {headerBrand || 'fox'}
                 </span>
-                <span className="text-[11px] text-emerald-800 font-medium">青丘夜雪 · 绿白数字视界</span>
+                <span className="text-[11px] text-sky-700 font-medium">青丘夜雪 · 蓝白数字视界</span>
               </div>
             </button>
 
-            {/* Changed from fox2 边缘云 to 站内消息状态灯 */}
+            {/* Message Status Indicator Light */}
             <div
               title={hasUnreadMessages ? "有新的系统与站内回复消息" : "站内消息与通信通道畅通"}
               className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer transition ${
                 hasUnreadMessages
                   ? 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
-                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-sky-50 text-sky-700 border-sky-200'
               }`}
               onClick={() => {
                 if (isAdmin) onTabChange('admin');
               }}
             >
-              <span className={`w-2 h-2 rounded-full ${hasUnreadMessages ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-              <Bell className="w-3 h-3 text-emerald-600" />
-              <span>{hasUnreadMessages ? '有新消息' : '站内消息状态灯: 畅通'}</span>
+              <span className={`w-2 h-2 rounded-full ${hasUnreadMessages ? 'bg-amber-500' : 'bg-sky-500'}`} />
+              <Bell className="w-3 h-3 text-sky-600" />
+              <span className="hidden sm:inline">{hasUnreadMessages ? '有新消息' : '站内消息状态灯: 畅通'}</span>
             </div>
           </div>
 
-          {/* Right Header Controls: Write / Login / User profile / Collapse Toggle */}
-          <div className="flex items-center space-x-2.5">
+          {/* Right Header Controls: Layout Toggle / Write / Login / User profile / Collapse Toggle */}
+          <div className="flex items-center space-x-2">
+            {/* One-Click Desktop/Mobile Layout Switcher */}
+            <button
+              onClick={onToggleLayoutMode}
+              title={layoutMode === 'desktop' ? "一键切换为手机优化布局" : "一键切换为电脑宽屏布局"}
+              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-md border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 text-xs font-semibold transition"
+            >
+              {layoutMode === 'desktop' ? (
+                <>
+                  <Smartphone className="w-3.5 h-3.5 text-sky-600" />
+                  <span className="hidden sm:inline">切手机布局</span>
+                </>
+              ) : (
+                <>
+                  <Monitor className="w-3.5 h-3.5 text-sky-600" />
+                  <span className="hidden sm:inline">切电脑布局</span>
+                </>
+              )}
+            </button>
+
             {/* Write Button (Hidden for guests) */}
             {!isGuest && (
               <button
                 onClick={onOpenWriteModal}
-                className="hidden md:flex items-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-emerald-600 text-white font-medium text-xs shadow-xs hover:bg-emerald-700 active:scale-95 transition"
+                className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-sky-600 text-white font-medium text-xs shadow-xs hover:bg-sky-700 active:scale-95 transition"
               >
                 <PenSquare className="w-3.5 h-3.5" />
                 <span>发表文章</span>
@@ -117,17 +142,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* User status & Auth */}
             {currentUser ? (
-              <div className="flex items-center space-x-2 border-l border-emerald-100 pl-3">
+              <div className="flex items-center space-x-2 border-l border-sky-100 pl-2">
                 <img
                   src={currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
                   alt={currentUser.username}
-                  className="w-7 h-7 rounded-full object-cover border border-emerald-300"
+                  className="w-7 h-7 rounded-full object-cover border border-sky-300"
                 />
                 <div className="hidden sm:flex flex-col text-left">
                   <span className="text-xs font-semibold text-slate-700 leading-tight">
                     {currentUser.username}
                   </span>
-                  <span className="text-[10px] text-emerald-600 font-medium leading-none">
+                  <span className="text-[10px] text-sky-600 font-medium leading-none">
                     {currentUser.role === 'admin' ? '唯一站长' : '注册用户'}
                   </span>
                 </div>
@@ -142,7 +167,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <button
                 onClick={onOpenAuthModal}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50 text-xs font-medium transition"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-md border border-sky-600 text-sky-700 hover:bg-sky-50 text-xs font-medium transition"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span>登录 / 注册</span>
@@ -152,10 +177,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Header Collapse / Expand Toggle Button */}
             <button
               onClick={onToggleCollapse}
-              title={isCollapsed ? "展开完整导航栏" : "收拢导航栏以沉浸阅读"}
-              className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition"
+              title={isCollapsed ? "展开完整页眉导航栏" : "收拢页眉导航栏以沉浸阅读"}
+              className="p-1.5 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md transition border border-transparent hover:border-sky-200"
             >
-              {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              {isCollapsed ? (
+                <div className="flex items-center gap-1 text-xs text-sky-600 font-medium">
+                  <ChevronDown className="w-4 h-4" />
+                  <span className="hidden md:inline">展开</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                  <ChevronUp className="w-4 h-4" />
+                  <span className="hidden md:inline">收拢</span>
+                </div>
+              )}
             </button>
           </div>
         </div>
@@ -163,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Nav Tab Bar (Collapsible) */}
       {!isCollapsed && (
-        <div className="border-t border-emerald-50 bg-[#fafcfb] transition-all duration-300">
+        <div className="border-t border-sky-50 bg-[#f8fbfe] transition-all duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex items-center space-x-1 sm:space-x-2 py-2 overflow-x-auto no-scrollbar">
               {navItems.filter(item => item.show).map(item => {
@@ -175,15 +210,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onClick={() => onTabChange(item.id)}
                     className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all ${
                       isActive
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-emerald-800 hover:bg-emerald-50'
+                        ? 'bg-sky-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-sky-800 hover:bg-sky-50'
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
                     <span>{item.label}</span>
                     {item.badge && (
                       <span className={`text-[10px] px-1 py-0.2 rounded font-mono ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'
+                        isActive ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-700'
                       }`}>
                         {item.badge}
                       </span>
