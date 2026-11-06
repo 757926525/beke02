@@ -90,12 +90,56 @@ npm run build:pages
 ```
 构建完成后会在根目录生成 `dist-pages.zip`（内含完整的静态单页路由 `404.html` 与 `_routes.json`）。直接在 Cloudflare Pages 后台拖拽上传即可。
 
-#### 3. 绑定 Cloudflare D1 / R2 / KV / Workers AI
-在 Cloudflare Pages 项目后台 -> **Settings** -> **Functions** -> **Bindings** 中：
-- **D1 Database**: 绑定变量名为 `DB`，关联您的 D1 数据库实例；
-- **R2 Bucket**: 绑定变量名为 `BUCKET`，关联您的 R2 免流量费对象存储桶；
-- **KV Namespace**: 绑定变量名为 `KV`，关联您的边缘键值命名空间；
-- **Workers AI**: 绑定变量名为 `AI`。
+#### 3. Cloudflare Pages 详细绑定操作步骤 (KV / R2 / 环境变量)
+在 Cloudflare 控制台完成以下绑定，即可启用零成本全无服务器的登录、网盘、相册与元数据持久化：
+
+1. **配置环境变量 (Environment Variables)**:
+   - 路径：**Workers & Pages** -> 您的 Pages 项目 -> **Settings** -> **Environment variables**
+   - 添加以下变量：
+     - `NODE_ENV`: `production`
+     - `ADMIN_USER`: `admin` (或您的专属站长账号)
+     - `ADMIN_PASSWORD`: `fox2admin888` (或您的自定义强密码)
+     - `CORS_ORIGIN`: `*`
+
+2. **绑定 KV Namespace (元数据与系统设置持久化)**:
+   - 首先在终端或控制台创建 KV：`npx wrangler kv namespace create FOX2_KV`
+   - 路径：**Settings** -> **Functions** -> **KV namespace bindings**
+   - 点击 **Add binding**:
+     - Variable name (变量名称): `FOX2_KV`
+     - KV namespace: 选择刚创建的 `FOX2_KV` 命名空间
+
+3. **绑定 R2 Bucket (网盘文件与电子书持久化存储)**:
+   - 首先在终端或控制台创建 R2 存储桶：`npx wrangler r2 bucket create fox2-storage`
+   - 路径：**Settings** -> **Functions** -> **R2 bucket bindings**
+   - 点击 **Add binding**:
+     - Variable name (变量名称): `FOX2_BUCKET`
+     - R2 bucket: 选择刚创建的 `fox2-storage` 存储桶
+
+4. **可选绑定 D1 Database (关系型数据库)**:
+   - 路径：**Settings** -> **Functions** -> **D1 database bindings**
+   - Variable name: `FOX2_DB` -> 绑定对应的 D1 实例
+
+#### 4. Workers / Pages Functions API 路由与 CORS 解决说明
+- **路由覆盖**：`functions/api/[[route]].ts` 实现了全自动边缘代理，拦截 `/api/auth/login`、`/api/files/upload`、`/api/files/download/:id` 等核心路由。
+- **全方法容错 (CORS & HTTP 405 彻底根除)**：
+  - 自动响应 `OPTIONS` 请求（状态码 `204 No Content`），允许全标头 `Content-Type, Authorization, x-user-role, Range` 与全动词 `GET, POST, PUT, DELETE, OPTIONS, HEAD`。
+  - 登录接口支持 `POST` Body 与 `GET` Query 双重容错。
+  - 上传接口支持 `POST` 与 `PUT` Multipart/二进制流传输。
+  - 下载接口支持 `GET`、`POST`、`HEAD`，并在前端使用动态 `Blob + Object URL` 绕过浏览器安全沙箱限制。
+
+#### 5. 部署与验证步骤清单 (Checklist)
+- [x] **步骤 1：本地编译验证**
+  - 执行 `npm run build`，确保 TypeScript 检查通过，前端产物输出至 `dist/`，服务端产物输出至 `dist-server/`。
+- [x] **步骤 2：生成 Pages 部署包**
+  - 执行 `npm run build:pages`，生成携带 `404.html` 和 `_routes.json` 的 `dist-pages.zip`。
+- [x] **步骤 3：验证登录功能**
+  - 访问页面右上角【登录】，测试访客免密快捷登录和站长账号（`admin` / `fox2admin888`）登录，确认角色标识切换正常。
+- [x] **步骤 4：验证文件上传**
+  - 在管理员状态下进入【网盘与 WebDAV】，点击【单个/批量上传文件】，选择文件上传，确认进度条加载完成且文件列表中显示新增项。
+- [x] **步骤 5：验证文件下载**
+  - 点击列表中的下载按钮，确认触发浏览器安全下载对话框，文件内容完整无截断。
+- [x] **步骤 6：验证 CORS 与预检请求**
+  - 使用 `curl -I -X OPTIONS http://127.0.0.1:3001/api/auth/login` 确认返回 `204 No Content` 且带有 CORS 标头。
 
 ---
 

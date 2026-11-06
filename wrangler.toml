@@ -1,0 +1,33 @@
+# Cloudflare Pages / Workers Configuration for fox2
+name = "fox2-blog"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./dist"
+
+[vars]
+NODE_ENV = "production"
+ADMIN_USER = "admin"
+ADMIN_PASSWORD = "fox2admin888"
+CORS_ORIGIN = "*"
+
+# Cloudflare KV Namespace (用于博客文章、系统设置、元数据持久化)
+# 创建命令: npx wrangler kv namespace create FOX2_KV
+# 部署后在 Cloudflare Pages Dashboard -> Settings -> Functions -> KV Namespace Bindings 绑定 FOX2_KV
+[[kv_namespaces]]
+binding = "FOX2_KV"
+id = "YOUR_KV_NAMESPACE_ID"
+preview_id = "YOUR_KV_PREVIEW_ID"
+
+# Cloudflare R2 Bucket (用于网盘与电子书文件持久化存储)
+# 创建命令: npx wrangler r2 bucket create fox2-storage
+# 部署后在 Cloudflare Pages Dashboard -> Settings -> Functions -> R2 Bucket Bindings 绑定 FOX2_BUCKET
+[[r2_buckets]]
+binding = "FOX2_BUCKET"
+bucket_name = "fox2-storage"
+preview_bucket_name = "fox2-storage-preview"
+
+# Optional: Cloudflare D1 Database (关系型数据库，如启用需绑定 FOX2_DB)
+# [[d1_databases]]
+# binding = "FOX2_DB"
+# database_name = "fox2-db"
+# database_id = "YOUR_D1_DATABASE_ID"
