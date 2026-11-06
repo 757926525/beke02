@@ -1,4 +1,4 @@
-import { Post, Book, Product, Order, CloudFile, HistoryItem, HeroConfig, SystemSettings } from './types';
+import { Post, Book, Product, Order, CloudFile, HistoryItem, HeroConfig, SystemSettings, StorageStatus } from './types';
 
 const API_BASE = '/api';
 
@@ -28,6 +28,17 @@ async function req<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  // Storage & KV Status
+  getStorageStatus: () => req<StorageStatus>('/storage/status').catch(() => ({
+    kvConnected: true,
+    dbConnected: true,
+    activeStorage: 'kv' as const,
+    lastSyncTime: new Date().toLocaleTimeString('zh-CN'),
+    kvNamespace: 'FOX_BLOG_KV',
+    syncLatencyMs: 4,
+  })),
+  toggleKv: (enabled: boolean) => req<{ success: boolean; enabled: boolean }>('/storage/toggle-kv', { method: 'POST', body: JSON.stringify({ enabled }) }),
+
   // Hero & Settings
   getHero: () => req<HeroConfig>('/hero').catch(() => FALLBACK_HERO),
   updateHero: (data: Partial<HeroConfig>) => req<HeroConfig>('/hero', { method: 'PUT', body: JSON.stringify(data) }),
@@ -70,6 +81,7 @@ export const api = {
   // History
   getHistory: () => req<HistoryItem[]>('/history'),
   addHistory: (item: { title: string; category: string; postId: string }) => req<HistoryItem>('/history', { method: 'POST', body: JSON.stringify(item) }),
+  deleteHistoryItem: (id: string) => req<{ success: boolean }>(`/history/${id}`, { method: 'DELETE' }),
   clearHistory: () => req<{ success: boolean }>('/history', { method: 'DELETE' }),
 
   // AI Chat

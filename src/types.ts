@@ -90,6 +90,9 @@ export interface SystemSettings {
   d1Enabled: boolean;
   r2BucketName: string;
   webdavUrl: string;
+  requireEmailRegistration?: boolean;
+  hideNonBlogForGuests?: boolean;
+  adminPassword?: string;
 }
 
 export interface GalleryItem {
@@ -117,4 +120,14 @@ export type NavTab =
   | 'media'
   | 'ai'
   | 'cloud'
+  | 'history'
   | 'admin';
+
+export interface StorageStatus {
+  kvConnected: boolean;
+  dbConnected: boolean;
+  activeStorage: 'kv' | 'db';
+  lastSyncTime: string;
+  kvNamespace: string;
+  syncLatencyMs: number;
+}

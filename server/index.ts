@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
 import { db } from './db.js';
+import { kvAdapter } from './kvAdapter.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -38,6 +39,19 @@ const upload = multer({
 });
 
 // API Routes
+
+// 0. Storage & KV Status Indicator
+app.get('/api/storage/status', async (_req: Request, res: Response) => {
+  const status = await kvAdapter.checkKvStatus();
+  res.json({ success: true, data: status });
+});
+
+// Toggle KV emulation for testing fallback
+app.post('/api/storage/toggle-kv', (req: Request, res: Response) => {
+  const { enabled } = req.body;
+  kvAdapter.setKvAvailable(!!enabled);
+  res.json({ success: true, enabled: !!enabled });
+});
 
 // 1. Hero & Summary
 app.get('/api/hero', (_req: Request, res: Response) => {
@@ -205,6 +219,11 @@ app.post('/api/history', (req: Request, res: Response) => {
   const item = db.addHistory({ title, category: category || '未分类', postId });
   res.json({ success: true, data: item });
 });
+app.delete('/api/history/:id', (req: Request, res: Response) => {
+  const ok = db.deleteHistory(req.params.id);
+  res.json({ success: ok });
+});
+
 app.delete('/api/history', (_req: Request, res: Response) => {
   db.clearHistory();
   res.json({ success: true });
@@ -215,9 +234,9 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
   const { messages, model, temperature } = req.body;
   const settings = db.getSettings();
 
-  const userQuery = Array.isArray(messages) && messages.length > 0
+  const userQuery = req.body.message || (Array.isArray(messages) && messages.length > 0
     ? messages[messages.length - 1].content
-    : '';
+    : '');
 
   // If user configured real Cloudflare Workers AI / DeepSeek API Key, attempt to call it
   if (settings.aiApiKey) {

@@ -10,6 +10,7 @@ import {
   Settings,
   PenLine,
   ExternalLink,
+  Clock,
   Menu,
   X
 } from 'lucide-react';
@@ -36,6 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'media', label: '媒体影音', icon: <Music className="w-4 h-4" /> },
     { id: 'ai', label: '编程AI', icon: <Cpu className="w-4 h-4" /> },
     { id: 'cloud', label: '网盘与 WebDAV', icon: <HardDrive className="w-4 h-4" /> },
+    { id: 'history', label: '足迹历程', icon: <Clock className="w-4 h-4" /> },
     { id: 'admin', label: '系统管理设置', icon: <Settings className="w-4 h-4" /> },
   ];
 

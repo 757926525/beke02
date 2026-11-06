@@ -8,6 +8,7 @@ import { GalleryView } from './components/GalleryView';
 import { MediaView } from './components/MediaView';
 import { AIView } from './components/AIView';
 import { CloudDriveView } from './components/CloudDriveView';
+import { HistoryManagerView } from './components/HistoryManagerView';
 import { AdminView } from './components/AdminView';
 import { WriteModal } from './components/WriteModal';
 import { ReadModal } from './components/ReadModal';
@@ -149,6 +150,11 @@ export const App: React.FC = () => {
     setPosts(prev => [created, ...prev]);
   };
 
+  const handleDeleteHistoryItem = async (id: string) => {
+    await api.deleteHistoryItem(id);
+    setHistory(prev => prev.filter(h => h.id !== id));
+  };
+
   const handleClearHistory = async () => {
     await api.clearHistory();
     setHistory([]);
@@ -252,6 +258,17 @@ export const App: React.FC = () => {
             storageTotal={hero.storageTotal}
             onUploadFile={handleUploadFile}
             onDeleteFile={handleDeleteFile}
+          />
+        )}
+
+        {activeTab === 'history' && (
+          <HistoryManagerView
+            history={history}
+            posts={posts}
+            onSelectPost={handleSelectPost}
+            onDeleteHistoryItem={handleDeleteHistoryItem}
+            onClearHistory={handleClearHistory}
+            storageType={settings.d1Enabled ? 'kv' : 'db'}
           />
         )}
 

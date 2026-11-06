@@ -541,6 +541,15 @@ class Database {
     this.saveData(this.data);
     return newHist;
   }
+  deleteHistory(id: string): boolean {
+    const prevLen = this.data.history.length;
+    this.data.history = this.data.history.filter(h => h.id !== id);
+    if (this.data.history.length !== prevLen) {
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
+  }
   clearHistory(): void {
     this.data.history = [];
     this.saveData(this.data);
